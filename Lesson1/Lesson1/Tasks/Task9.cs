@@ -28,6 +28,7 @@ namespace Lesson1.Tasks
 		/// 
 		/// (original: Create Mono that is empty and sends onComplete only)
 		/// </summary>
+		/// <remark>the Observable.Empty<long>() variant exists</remark>
 		public static IObservable<long> CreateMonoEmittingOnlyOnComplete() =>
 			new ObservableEmittingOnlyOnComplete<long>();
 
