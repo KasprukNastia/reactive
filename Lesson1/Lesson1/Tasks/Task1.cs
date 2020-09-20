@@ -8,6 +8,7 @@ namespace Lesson1.Tasks
     {
         /// <summary>
         /// Create IObservable that emits in range [0..20)
+        /// 
         /// (original: Create Flux that emits in range [0..20))
         /// </summary>
         public static IObservable<int> CreateSequence() =>

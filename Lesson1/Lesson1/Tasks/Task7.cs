@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace Lesson1.Tasks
 {
-    public class Task5
+    public class Task7
     {
         /// <summary>
-        /// Generate IObservable from Task
+        /// NOT SURE!!!
         /// 
-        /// (original: Generate Mono from Callable)
+        /// (original: Adapt CompletionStage to Publisher using Project Reactor)
         /// </summary>
         public static IObservable<string> CreateSequence(Task<string> callable) =>
             callable.ToObservable();

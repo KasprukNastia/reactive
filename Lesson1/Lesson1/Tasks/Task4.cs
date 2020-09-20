@@ -8,6 +8,7 @@ namespace Lesson1.Tasks
     {
         /// <summary>
         /// Create IObservable from IEnumerable 
+        /// 
         /// (original: Create Flux from Java Stream)
         /// </summary>
         public static IObservable<string> CreateSequence(IEnumerable<string> stream) =>

@@ -7,6 +7,7 @@ namespace Lesson1.Tasks
     {
         /// <summary>
         /// Generate an IObservable from array
+        /// 
         /// (original: Generate a Flux from array)
         /// </summary>
         public static IObservable<string> CreateSequence(params string[] args) =>

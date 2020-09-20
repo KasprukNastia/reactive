@@ -7,6 +7,7 @@ namespace Lesson1.Tasks
     {
         /// <summary>
         /// Create an IObservable just of a single element
+        /// 
         /// (original: Create a Flux just of a single element)
         /// </summary>
         public static IObservable<string> CreateSequenceOfASingleElement(string element) =>
