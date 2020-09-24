@@ -6,7 +6,6 @@ namespace Lesson2.Tasks
 {
     public class Task8
     {
-
         /// <summary>
         /// NOT SURE!!!
         /// Collect all elements in IObservable into list
