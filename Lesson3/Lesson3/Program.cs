@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Lesson3.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Reactive.Linq;
 
 namespace Lesson3
 {
@@ -6,7 +9,7 @@ namespace Lesson3
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            
         }
     }
 }

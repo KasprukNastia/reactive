@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Reactive.Linq;
 
 namespace Lesson3.Tasks
 {
     public class Task8
     {
 		/// <summary>
+		/// Depends on the clientPreferences IObservable, 
+		/// switch between vanillaIceCreamStream and chocolateIceCreamStream
 		/// 
 		/// (original: Depends on the clientPreferences Flux, 
 		/// switch between vanillaIceCreamStream and chocolateIceCreamStream)
@@ -12,7 +15,7 @@ namespace Lesson3.Tasks
 		public static IObservable<IceCreamBall> FillIceCreamWaffleBowl(IObservable<IceCreamType> clientPreferences,
 			IObservable<IceCreamBall> vanillaIceCreamStream,
 			IObservable<IceCreamBall> chocolateIceCreamStream) =>
-			throw new NotImplementedException();
+			Observable.Switch(clientPreferences.Select(p => p == IceCreamType.VANILLA ? vanillaIceCreamStream : chocolateIceCreamStream));
 
 		public class IceCreamBall
 		{
@@ -23,7 +26,7 @@ namespace Lesson3.Tasks
 				_type = type;
 			}
 
-			public override bool Equals(object o)
+            public override bool Equals(object o)
 			{
 				if (this == o)
 				{

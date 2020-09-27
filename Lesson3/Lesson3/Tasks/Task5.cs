@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Linq;
 using System.Reactive.Linq;
 
 namespace Lesson3.Tasks
 {
 	/// <summary>
+	/// NOT IMPLEMENTED!!!
+	/// 
 	/// - Group all the words by first letter
 	/// - Count how many times the first letter appears in the grouped words
 	/// - Summarize the counts and combine them with character that represents a group
@@ -20,13 +23,14 @@ namespace Lesson3.Tasks
 	public class Task5
     {
 		public static IObservable<(char, int)> GroupWordsByFirstLatter(IObservable<string> words) =>
-			throw new NotImplementedException();
+			words.Replay(GroupByFirstLetter).Replay(CountLettersInWordsInGroup);
 
 		public static IObservable<IGroupedObservable<char, string>> GroupByFirstLetter(IObservable<string> words) =>
-			throw new NotImplementedException();
+			words.GroupBy(w => w.FirstOrDefault());
 
+		// незрозуміле використання Collect
 		public static IObservable<(char, int)> CountLettersInWordsInGroup(
 			IObservable<IGroupedObservable<char, string>> groupedWords) =>
-			throw new NotImplementedException();
+			groupedWords.Select(words => (words.Key, words.ToEnumerable().Sum(w => w.Count(l => l.Equals(words.Key)))));
 	}
 }
