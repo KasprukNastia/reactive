@@ -9,7 +9,7 @@ namespace Lesson2.Tasks
 		/// 
 		/// (original: Solve a FizzBuzz problem using Flux API)
 		/// </summary>
-		public static IObservable<string> FizzBuzz(IObservable<Integer> input) =>
+		public static IObservable<string> FizzBuzz(IObservable<int> input) =>
 			throw new NotImplementedException();
 
 		public class IndexedWord

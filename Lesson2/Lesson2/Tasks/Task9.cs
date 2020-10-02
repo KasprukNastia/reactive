@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reactive.Joins;
+using System.Reactive.Linq;
 
 namespace Lesson2.Tasks
 {
@@ -9,7 +11,7 @@ namespace Lesson2.Tasks
         /// 
         /// (original: Ignore all elements from Flux and then propagate onComplete only)
         /// </summary>
-        public static IObservable<long> WaitUntilFluxCompletion(IObservable<long> observable) =>
-            throw new NotImplementedException();
+        public static Plan<long> WaitUntilFluxCompletion(IObservable<long> observable) =>
+            observable.Then(n => n);
     }
 }

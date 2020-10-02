@@ -31,6 +31,6 @@ namespace Lesson3.Tasks
 		// незрозуміле використання Collect
 		public static IObservable<(char, int)> CountLettersInWordsInGroup(
 			IObservable<IGroupedObservable<char, string>> groupedWords) =>
-			groupedWords.Select(words => (words.Key, words.ToEnumerable().Sum(w => w.Count(l => l.Equals(words.Key)))));
+			groupedWords.Select(words => (words.Key, words.Sum(w => w.Count(l => l.Equals(words.Key))).First()));
 	}
 }
