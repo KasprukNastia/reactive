@@ -10,8 +10,6 @@ namespace Lesson1.Tasks
         /// 
         /// (original: Create Flux which emits elements in interval)
         /// </summary>
-        /// <param name="duration"></param>
-        /// <returns></returns>
         public static IObservable<long> CreateSequence(TimeSpan duration) =>
             Observable.Interval(duration);
     }
