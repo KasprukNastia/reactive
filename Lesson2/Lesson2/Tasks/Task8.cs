@@ -12,7 +12,7 @@ namespace Lesson2.Tasks
         /// 
         /// (original: Collect all elements in Flux into list)
         /// </summary>
-        public static IObservable<IList<string>> transformToList(IObservable<string> observable) =>
+        public static IObservable<IList<string>> TransformToList(IObservable<string> observable) =>
             observable.Buffer(int.MaxValue);
     }
 }
