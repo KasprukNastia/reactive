@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 
 namespace Lesson11.Blocking_Payment_Service
 {
@@ -12,9 +14,7 @@ namespace Lesson11.Blocking_Payment_Service
             _repository = repository;
         }
 
-        public IObservable<Payment> FindAllByUserId(string userId)
-        {
-            throw new NotImplementedException();
-        }
+        public IObservable<Payment> FindAllByUserId(string userId) =>
+            _repository.FindAllByUserId(userId).ToObservable().ObserveOn(ThreadPoolScheduler.Instance);
     }
 }
