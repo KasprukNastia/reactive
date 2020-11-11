@@ -1,4 +1,5 @@
 ﻿using Lesson12.Common.Src.Dto;
+using Lesson12.Common.Src.Service.Utils;
 using Lesson12.Lesson12.Crypto_Service_Idl.Src.Service;
 using Lesson12.Price_Service_Idl.Src.Service;
 using Microsoft.Extensions.Logging;
@@ -12,10 +13,10 @@ namespace Lesson12.Price_Service.Src.Service.Impl
     {
 		private static readonly long DEFAULT_AVG_PRICE_INTERVAL = 30L;
 
-		private readonly ILogger _logger;
+		private readonly ILogger<DefaultPriceService> _logger;
 		private readonly IObservable<MessageDTO<float>> _sharedStream;
 
-		public DefaultPriceService(ILogger logger, ICryptoService cryptoService)
+		public DefaultPriceService(ILogger<DefaultPriceService> logger, ICryptoService cryptoService)
 		{
 			_logger = logger;
 			_sharedStream = cryptoService.EventsStream()
@@ -27,8 +28,7 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 		{
 			return _sharedStream.Let(mainFlow => Observable.Merge(
 				mainFlow,
-				AveragePrice(intervalPreferencesStream, mainFlow)
-			));
+				AveragePrice(intervalPreferencesStream, mainFlow)));
 		}
 
 		// FIXME:
@@ -42,7 +42,7 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 			// TODO: verify that price message are valid
 			// HINT: Use MessageMapper methods to perform filtering and validation
 
-			throw new NotImplementedException();
+			return input.Where(m => MessageMapper.IsPriceMessageType(m) && MessageMapper.IsValidPriceMessage(m));
 		}
 
 		// Visible for testing
@@ -50,7 +50,7 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 		{
 			// TODO map to Statistic message using MessageMapper.mapToPriceMessage
 
-			throw new NotImplementedException();
+			return input.Select(m => MessageMapper.MapToPriceMessage(m));
 		}
 
 		// 1.1)   TODO Collect crypto currency price during the interval of seconds
@@ -66,7 +66,20 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 		IObservable<MessageDTO<float>> AveragePrice(IObservable<long> requestedInterval,
 				IObservable<MessageDTO<float>> priceData)
 		{
-			throw new NotImplementedException();
+			// 1.1
+			return requestedInterval.DefaultIfEmpty(DEFAULT_AVG_PRICE_INTERVAL)
+				.SelectMany(interval => priceData.Window(TimeSpan.FromMilliseconds(interval)))
+				.Switch()
+			// 1.2 + 1.3.2
+				.GroupBy(m => m.Currency)
+				.Select(grouped => 
+				new { 
+					Currency = grouped.Key, 
+					Messages = grouped, 
+					AvgSum = grouped.Aggregate(Sum.Empty(), (sum, mes) => sum.Add(mes.Data), sum => sum.Avg()) 
+				})
+			// 1.3.3
+				.SelectMany(val => val.Messages.CombineLatest(val.AvgSum, (mes, avg) => MessageDTO<float>.Avg(avg, val.Currency, mes.Market)));
 		}
 	}
 }

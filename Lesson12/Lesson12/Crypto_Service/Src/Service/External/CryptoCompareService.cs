@@ -3,7 +3,9 @@ using Lesson12.Lesson12.Crypto_Service_Idl.Src.Service;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace Lesson12.Crypto_Service.Src.Service.External
 {
@@ -13,12 +15,12 @@ namespace Lesson12.Crypto_Service.Src.Service.External
 
         private readonly IObservable<Dictionary<string, object>> _reactiveCryptoListener;
 
-        public CryptoCompareService(ILogger logger)
+        public CryptoCompareService(ILogger<CryptoCompareClient> logger, IEnumerable<IMessageUnpacker> messageUnpackers)
         {
             _reactiveCryptoListener = new CryptoCompareClient(logger)
                     .Connect(
                         new List<string> { "5~CCCAGG~BTC~USD", "0~Coinbase~BTC~USD", "0~Cexio~BTC~USD" }.ToObservable(),
-                        new List<IMessageUnpacker> { new PriceMessageUnpacker(), new TradeMessageUnpacker() }
+                        messageUnpackers.ToList()
                     )
                     .Let(ProvideResilience)
                     .Let(ProvideCaching);
@@ -32,13 +34,15 @@ namespace Lesson12.Crypto_Service.Src.Service.External
         // TODO: implement resilience such as retry with delay
         public static IObservable<T> ProvideResilience<T>(IObservable<T> input)
         {
-            throw new NotImplementedException();
+            return input.Retry().Delay(TimeSpan.FromSeconds(2));
         }
 
         // TODO: implement caching of 3 last elements & multi subscribers support
         public static IObservable<T> ProvideCaching<T>(IObservable<T> input)
         {
-            throw new NotImplementedException();
+            ReplaySubject<T> subject = new ReplaySubject<T>(bufferSize: 3);
+            input.Subscribe(subject);
+            return subject;
         }
     }
 }

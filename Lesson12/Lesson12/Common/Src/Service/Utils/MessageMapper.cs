@@ -43,7 +43,7 @@ namespace Lesson12.Common.Src.Service.Utils
                     messageEvent.ContainsKey(MARKET_KEY);
         }
 
-        public static bool isTradeMessageType(Dictionary<string, object> messageEvent)
+        public static bool IsTradeMessageType(Dictionary<string, object> messageEvent)
         {
             return messageEvent.ContainsKey(TYPE_KEY) &&
                     messageEvent[TYPE_KEY].Equals("0");

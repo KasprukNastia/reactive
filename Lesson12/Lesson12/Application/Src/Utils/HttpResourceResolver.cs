@@ -7,9 +7,9 @@ namespace Lesson12.Application.Src.Utils
 {
     public class HttpResourceResolver
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<HttpResourceResolver> _logger;
 
-        public HttpResourceResolver(ILogger logger)
+        public HttpResourceResolver(ILogger<HttpResourceResolver> logger)
         {
             _logger = logger;
         }

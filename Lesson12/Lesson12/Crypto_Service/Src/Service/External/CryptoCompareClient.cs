@@ -10,9 +10,9 @@ namespace Lesson12.Crypto_Service.Src.Service.External
 {
     public class CryptoCompareClient
     {
-        private readonly ILogger _logger;
+        private readonly ILogger<CryptoCompareClient> _logger;
 
-        public CryptoCompareClient(ILogger logger)
+        public CryptoCompareClient(ILogger<CryptoCompareClient> logger)
         {
             _logger = logger;
         }

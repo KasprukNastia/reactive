@@ -16,10 +16,10 @@ namespace Lesson12.Trade_Service.Src.Repository.impl
 		private static readonly string DB_NAME = "crypto";
 		private static readonly string COLLECTION_NAME = "trades";
 
-		private readonly ILogger _log;
+		private readonly ILogger<MongoTradeRepository> _log;
 		private readonly IMongoCollection<BsonDocument> _collection;
 
-		public MongoTradeRepository(ILogger log, MongoClient client)
+		public MongoTradeRepository(ILogger<MongoTradeRepository> log, MongoClient client)
 		{
 			_log = log;
 			_collection = client.GetDatabase(DB_NAME)
