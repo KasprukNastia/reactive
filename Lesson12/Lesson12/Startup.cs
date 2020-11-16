@@ -1,19 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Lesson12.Crypto_Service.Src.Service.External;
 using Lesson12.Crypto_Service.Src.Service.External.Utils;
 using Lesson12.Lesson12.Crypto_Service_Idl.Src.Service;
 using Lesson12.Price_Service.Src.Service.Impl;
 using Lesson12.Price_Service_Idl.Src.Service;
+using Lesson12.Sockets;
 using Lesson12.Trade_Service.Src.Repository;
 using Lesson12.Trade_Service.Src.Repository.impl;
 using Lesson12.Trade_Service.Src.Service.impl;
 using Lesson12.Trade_Service_Idl.Src.Service;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -33,7 +29,7 @@ namespace Lesson12
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddWebSocketManager();
 
             services.AddTransient<CryptoCompareClient>();
             services.AddTransient<ICryptoService, CryptoCompareService>();
@@ -45,6 +41,7 @@ namespace Lesson12
             services.AddTransient<ITradeRepository>(sp =>
                 new MongoTradeRepository(sp.GetService<ILogger<MongoTradeRepository>>(), new MongoClient("mongodb://localhost:27017"))); // !!!
             services.AddTransient<ITradeService, DefaultTradeService>();
+            services.AddTransient<WSHandler>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,16 +51,16 @@ namespace Lesson12
             {
                 app.UseDeveloperExceptionPage();
             }
-           
-            app.UseDefaultFiles();
+
+            var serviceScopeFactory = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>();
+            var serviceProvider = serviceScopeFactory.CreateScope().ServiceProvider;
+
+            app.UseWebSockets();
+            app.MapWebSocketManager("/ws/stream", serviceProvider.GetService<WSHandler>());
             app.UseStaticFiles();
 
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
         }
     }
 }

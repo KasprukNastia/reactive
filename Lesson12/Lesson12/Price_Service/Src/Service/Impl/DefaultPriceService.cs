@@ -67,19 +67,14 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 				IObservable<MessageDTO<float>> priceData)
 		{
 			// 1.1
-			return requestedInterval.DefaultIfEmpty(DEFAULT_AVG_PRICE_INTERVAL)
+			return Observable.Concat(Observable.Return(DEFAULT_AVG_PRICE_INTERVAL), requestedInterval)
 				.SelectMany(interval => priceData.Window(TimeSpan.FromMilliseconds(interval)))
 				.Switch()
-			// 1.2 + 1.3.2
+				// 1.2 + 1.3.2
 				.GroupBy(m => m.Currency)
-				.Select(grouped => 
-				new { 
-					Currency = grouped.Key, 
-					Messages = grouped, 
-					AvgSum = grouped.Aggregate(Sum.Empty(), (sum, mes) => sum.Add(mes.Data), sum => sum.Avg()) 
-				})
-			// 1.3.3
-				.SelectMany(val => val.Messages.CombineLatest(val.AvgSum, (mes, avg) => MessageDTO<float>.Avg(avg, val.Currency, mes.Market)));
+				.SelectMany(grouped => grouped.Aggregate(Sum.Empty(), (sum, mes) => sum.Add(mes.Data), sum => sum.Avg())
+						.Select(avg => MessageDTO<float>.Avg(avg, grouped.Key, "Local"))
+				);
 		}
 	}
 }

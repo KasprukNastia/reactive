@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
 namespace Lesson12.Trade_Service.Src.Service.impl
 {
@@ -24,6 +25,16 @@ namespace Lesson12.Trade_Service.Src.Service.impl
 			IEnumerable<ITradeRepository> tradeRepositories)
 		{
 			_logger = logger;
+			_sharedStream = service.EventsStream()
+				.Let(FilterAndMapTradingEvents)
+				.Let(trades =>
+				{
+					trades.Let(MapToDomainTrade)
+						.Let(f => ResilientlyStoreByBatchesToAllRepositories(f, tradeRepositories.First(), tradeRepositories.Last()))
+						.Subscribe(new Subject<int>());
+
+					return trades;
+				});
 		}
 
 		public IObservable<MessageDTO<MessageTrade>> TradesStream() => _sharedStream;

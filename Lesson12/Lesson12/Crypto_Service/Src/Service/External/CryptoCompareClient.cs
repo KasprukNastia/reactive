@@ -21,7 +21,7 @@ namespace Lesson12.Crypto_Service.Src.Service.External
             IObservable<string> input, 
             ICollection<IMessageUnpacker> unpackers)
         {
-            return Observable.Defer(() => Observable.Create<Dictionary<string, object>>(async sink =>
+            return Observable.Defer(() => Observable.Create<Dictionary<string, object>>(async (sink, token) =>
             {
                 SocketIoClient socket = new SocketIoClient();
 
@@ -80,6 +80,7 @@ namespace Lesson12.Crypto_Service.Src.Service.External
                 socket.ErrorReceived += (sender, args) => sink.OnError(new Exception(args.Value));
                 socket.Disconnected += (sender, args) => sink.OnCompleted();
 
+                token.Register(async () => await closeSocket());
                 await socket.ConnectAsync(connectionUri);
             }));
         }
