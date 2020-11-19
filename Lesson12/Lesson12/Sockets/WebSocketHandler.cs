@@ -52,6 +52,6 @@ namespace Lesson12.Sockets
             }
         }
 
-        public abstract Task ReceiveAsync(WebSocket socket, WebSocketReceiveResult result, byte[] buffer);
+        public abstract IObservable<Task> ReceiveAsync(WebSocket socket, WebSocketReceiveResult result, byte[] buffer);
     }
 }

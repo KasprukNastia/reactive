@@ -51,7 +51,8 @@ namespace Lesson12.Trade_Service.Src.Repository.impl
 
 		private IObservable<int> StoreInMongo(List<BsonDocument> trades)
 		{
-			_collection.InsertMany(trades);
+			if(trades.Count > 0)
+				_collection.InsertMany(trades);
 			return Observable.Return(1);
 		}
 	}

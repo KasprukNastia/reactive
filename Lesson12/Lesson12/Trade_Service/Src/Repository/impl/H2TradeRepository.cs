@@ -37,7 +37,7 @@ namespace Lesson12.Trade_Service.Src.Repository.impl
                 throw new ArgumentNullException(nameof(connectionString));
             _connectionString = connectionString;
 
-            InitDB();
+            //InitDB();
             PingDB();
             ReportDbStatistics();
         }
@@ -120,6 +120,7 @@ namespace Lesson12.Trade_Service.Src.Repository.impl
 
             int affectedRows = 0;
                 using SqlConnection con = new SqlConnection(_connectionString);
+            con.Open();
                 using SqlTransaction trans = con.BeginTransaction();
 
                 foreach (var param in BuildInsertStatement(trades))

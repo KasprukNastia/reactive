@@ -14,19 +14,21 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 		private static readonly long DEFAULT_AVG_PRICE_INTERVAL = 30L;
 
 		private readonly ILogger<DefaultPriceService> _logger;
-		private readonly IObservable<MessageDTO<float>> _sharedStream;
+		private readonly ICryptoService _cryptoService;
+
+		private IObservable<MessageDTO<float>> SharedStream => _cryptoService.EventsStream()
+				.Let(SelectOnlyPriceUpdateEvents)
+				.Let(CurrentPrice);
 
 		public DefaultPriceService(ILogger<DefaultPriceService> logger, ICryptoService cryptoService)
 		{
 			_logger = logger;
-			_sharedStream = cryptoService.EventsStream()
-				.Let(SelectOnlyPriceUpdateEvents)
-				.Let(CurrentPrice);
+			_cryptoService = cryptoService ?? throw new ArgumentNullException(nameof(cryptoService));
 		}
 
 		public IObservable<MessageDTO<float>> PricesStream(IObservable<long> intervalPreferencesStream)
 		{
-			return _sharedStream.Let(mainFlow => Observable.Merge(
+			return SharedStream.Let(mainFlow => Observable.Merge(
 				mainFlow,
 				AveragePrice(intervalPreferencesStream, mainFlow)));
 		}
@@ -66,11 +68,9 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 		IObservable<MessageDTO<float>> AveragePrice(IObservable<long> requestedInterval,
 				IObservable<MessageDTO<float>> priceData)
 		{
-			// 1.1
 			return Observable.Concat(Observable.Return(DEFAULT_AVG_PRICE_INTERVAL), requestedInterval)
 				.SelectMany(interval => priceData.Window(TimeSpan.FromMilliseconds(interval)))
 				.Switch()
-				// 1.2 + 1.3.2
 				.GroupBy(m => m.Currency)
 				.SelectMany(grouped => grouped.Aggregate(Sum.Empty(), (sum, mes) => sum.Add(mes.Data), sum => sum.Avg())
 						.Select(avg => MessageDTO<float>.Avg(avg, grouped.Key, "Local"))

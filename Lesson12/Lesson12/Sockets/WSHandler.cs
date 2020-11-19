@@ -25,16 +25,16 @@ namespace Lesson12.Sockets
 			_tradeService = tradeService;
 		}
 
-		public override Task ReceiveAsync(WebSocket socket, WebSocketReceiveResult result, byte[] buffer)
+		public override IObservable<Task> ReceiveAsync(WebSocket socket, WebSocketReceiveResult result, byte[] buffer)
 		{
-			return Task.FromResult(
-				Observable.Return(Encoding.UTF8.GetString(buffer, 0, result.Count))
-					.Let(Handle).Select(m => JsonConvert.SerializeObject(m))
-					.Select(async m => await SendMessageToAllAsync(m as string)));
+			return Observable.Return(Encoding.UTF8.GetString(buffer, 0, result.Count))
+					.Let(Handle)
+					.Select(m => JsonConvert.SerializeObject(m))
+					.Select(async m => await SendMessageToAllAsync(m as string));
 		}
 
 		[HttpGet]
-		private IObservable<dynamic> Handle(IObservable<string> input)
+		public IObservable<dynamic> Handle(IObservable<string> input)
 		{
             return Observable.Merge<dynamic>(
 				_priceService.PricesStream(input.Let(HandleRequestedAveragePriceIntervalValue)),

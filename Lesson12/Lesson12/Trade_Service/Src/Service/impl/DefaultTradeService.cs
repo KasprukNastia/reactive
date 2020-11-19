@@ -17,7 +17,8 @@ namespace Lesson12.Trade_Service.Src.Service.impl
     public class DefaultTradeService : ITradeService
     {
 		private readonly ILogger<DefaultTradeService> _logger;
-		private readonly IObservable<MessageDTO<MessageTrade>> _sharedStream;
+		private readonly ICryptoService _cryptoService;
+		private readonly IEnumerable<ITradeRepository> _tradeRepositories;
 
 		public DefaultTradeService(
 			ILogger<DefaultTradeService> logger,
@@ -25,19 +26,24 @@ namespace Lesson12.Trade_Service.Src.Service.impl
 			IEnumerable<ITradeRepository> tradeRepositories)
 		{
 			_logger = logger;
-			_sharedStream = service.EventsStream()
+			_cryptoService = service ?? throw new ArgumentNullException(nameof(service));
+			_tradeRepositories = tradeRepositories ?? throw new ArgumentNullException(nameof(tradeRepositories));
+		}
+
+		public IObservable<MessageDTO<MessageTrade>> TradesStream()
+        {
+			return _cryptoService.EventsStream()
 				.Let(FilterAndMapTradingEvents)
 				.Let(trades =>
 				{
 					trades.Let(MapToDomainTrade)
-						.Let(f => ResilientlyStoreByBatchesToAllRepositories(f, tradeRepositories.First(), tradeRepositories.Last()))
+						.Let(f => ResilientlyStoreByBatchesToAllRepositories(f, _tradeRepositories.First(), _tradeRepositories.Last()))
 						.Subscribe(new Subject<int>());
 
 					return trades;
 				});
 		}
 
-		public IObservable<MessageDTO<MessageTrade>> TradesStream() => _sharedStream;
 
 		private IObservable<MessageDTO<MessageTrade>> FilterAndMapTradingEvents(IObservable<Dictionary<string, object>> input)
 		{
@@ -56,12 +62,23 @@ namespace Lesson12.Trade_Service.Src.Service.impl
 				ITradeRepository tradeRepository1,
 				ITradeRepository tradeRepository2)
 		{
-			return input.Buffer(TimeSpan.FromSeconds(1)).SelectMany(trades =>
-			{
-				List<Trade> tradesList = trades.ToList();
+			var helperSubject = new BehaviorSubject<object>(new object());
+			helperSubject.OnNext(new object());
 
-				return tradeRepository1.SaveAll(tradesList).Merge(tradeRepository2.SaveAll(tradesList));
-			}).Timeout(TimeSpan.FromSeconds(1)).Retry(100);
+			IObservable<(long, object)> bufferBoundaries = Observable.Interval(TimeSpan.FromSeconds(1)).Zip(helperSubject, (i, o) => (i, o));
+
+			return input.Buffer(bufferBoundaries)
+				.SelectMany(trades =>
+				{
+					List<Trade> tradesList = trades.ToList();
+
+					return SafetySave(tradeRepository1, tradesList)
+						.Merge(SafetySave(tradeRepository2, tradesList))
+						.Do(onNext: i => { }, onCompleted: () => helperSubject.OnNext(new object()));
+				});
+
+			IObservable<int> SafetySave(ITradeRepository tradeRepository, List<Trade> tradesList) =>
+				tradeRepository.SaveAll(tradesList).Timeout(TimeSpan.FromSeconds(1)).Retry(100);
 		}
 	}
 }
