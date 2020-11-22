@@ -34,7 +34,7 @@ namespace Lesson12.Crypto_Service.Src.Service.External
         // TODO: implement resilience such as retry with delay
         public static IObservable<T> ProvideResilience<T>(IObservable<T> input)
         {
-            return input.Retry().Delay(TimeSpan.FromSeconds(2));
+            return input.RetryWhen(errors => errors.Delay(TimeSpan.FromSeconds(2)));
         }
 
         // TODO: implement caching of 3 last elements & multi subscribers support
