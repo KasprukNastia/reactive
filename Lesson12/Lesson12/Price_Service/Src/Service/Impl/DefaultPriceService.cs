@@ -28,7 +28,7 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 
 		public IObservable<MessageDTO<float>> PricesStream(IObservable<long> intervalPreferencesStream)
 		{
-			return SharedStream;
+			return Observable.Merge(SharedStream, AveragePrice(intervalPreferencesStream, SharedStream));
 		}
 
 		// FIXME:
@@ -43,9 +43,7 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 			// HINT: Use MessageMapper methods to perform filtering and validation
 
 			return input
-				.Do(m => _logger.LogInformation($"Before Filter: {m}"))
-				.Where(m => MessageMapper.IsPriceMessageType(m) && MessageMapper.IsValidPriceMessage(m))
-				.Do(m => _logger.LogInformation($"After Filter: {m}"));
+				.Where(m => MessageMapper.IsPriceMessageType(m) && MessageMapper.IsValidPriceMessage(m));
 		}
 
 		// Visible for testing
@@ -63,6 +61,18 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 		//        HINT for reduce consider to reuse Sum.empty and Sum#add
 		// 1.3.2) TODO calculate average for reduced Sum object using Sun#avg
 		// 1.3.3) TODO map to Statistic message using MessageDTO#avg()
+		
+		//             |   |
+		//             |   |
+		//         ____|   |____
+		//        |             |
+		//        |             |
+		//        |             |
+		//        |____     ____|
+		//             |   |
+		//             |   |
+		//             |   |
+		
 
 		// Visible for testing
 		// TODO: Remove as should be implemented by trainees
@@ -70,12 +80,18 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 				IObservable<MessageDTO<float>> priceData)
 		{
 			return Observable.Concat(Observable.Return(DEFAULT_AVG_PRICE_INTERVAL), requestedInterval)
-				.SelectMany(interval => priceData.Window(TimeSpan.FromMilliseconds(interval)))
-				.Switch()
-				.GroupBy(m => m.Currency)
-				.SelectMany(grouped => grouped.Aggregate(Sum.Empty(), (sum, mes) => sum.Add(mes.Data), sum => sum.Avg())
-						.Select(avg => MessageDTO<float>.Avg(avg, grouped.Key, "Local"))
-				);
+				.Select(interval => // 5
+					priceData
+						.Window(TimeSpan.FromSeconds(interval))
+						.SelectMany(s => 
+							s
+								.GroupBy(m => m.Currency)
+								.SelectMany(grouped => grouped
+									.Aggregate(Sum.Empty(), (sum, mes) => sum.Add(mes.Data), sum => sum.Avg())
+									.Select(avg => MessageDTO<float>.Avg(avg, grouped.Key, "Local"))
+							))
+				)
+				.Switch();
 		}
 	}
 }

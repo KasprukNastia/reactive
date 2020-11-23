@@ -19,13 +19,13 @@ namespace Lesson12.Crypto_Service.Src.Service.External
 
         public CryptoCompareService(ILogger<CryptoCompareClient> logger, IEnumerable<IMessageUnpacker> messageUnpackers)
         {
-            _connectedClient = ProvideCaching(new CryptoCompareClient(logger)
+            _connectedClient = new CryptoCompareClient(logger)
                     .Connect(
                         new List<string> { "5~CCCAGG~BTC~USD", "0~Coinbase~BTC~USD", "0~Cexio~BTC~USD" }.ToObservable(),
                         messageUnpackers.ToList()
                     )
-                    // .Let(ProvideResilience)
-                    .Do(m => Console.Out.WriteLine($"CryptoCompareService: Getting message: {m}")));
+                    .Let(ProvideResilience)
+                    .Let(ProvideCaching);
         }
 
         public IObservable<Dictionary<string, object>> EventsStream()
