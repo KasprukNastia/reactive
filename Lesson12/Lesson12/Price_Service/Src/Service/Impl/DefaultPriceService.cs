@@ -28,9 +28,7 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 
 		public IObservable<MessageDTO<float>> PricesStream(IObservable<long> intervalPreferencesStream)
 		{
-			return SharedStream.Let(mainFlow => Observable.Merge(
-				mainFlow,
-				AveragePrice(intervalPreferencesStream, mainFlow)));
+			return SharedStream;
 		}
 
 		// FIXME:
@@ -44,7 +42,10 @@ namespace Lesson12.Price_Service.Src.Service.Impl
 			// TODO: verify that price message are valid
 			// HINT: Use MessageMapper methods to perform filtering and validation
 
-			return input.Where(m => MessageMapper.IsPriceMessageType(m) && MessageMapper.IsValidPriceMessage(m));
+			return input
+				.Do(m => _logger.LogInformation($"Before Filter: {m}"))
+				.Where(m => MessageMapper.IsPriceMessageType(m) && MessageMapper.IsValidPriceMessage(m))
+				.Do(m => _logger.LogInformation($"After Filter: {m}"));
 		}
 
 		// Visible for testing

@@ -1,5 +1,7 @@
 ﻿using Lesson12.Trade_Service.Src.Domain;
 using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Lesson12.Common.Src.Dto
 {
@@ -9,7 +11,9 @@ namespace Lesson12.Common.Src.Dto
         public T Data { get; }
         public string Currency { get; }
         public string Market { get; }
-        public Type MessageType { get; }
+        
+        [JsonConverter(typeof(StringEnumConverter))]
+        public Type Type { get; }
 
         public MessageDTO(long timestamp, T data, string currency, string market, Type type)
         {
@@ -17,7 +21,7 @@ namespace Lesson12.Common.Src.Dto
             Data = data;
             Currency = currency;
             Market = market;
-            MessageType = type;
+            Type = type;
         }
 
         public override bool Equals(object o)
@@ -30,7 +34,7 @@ namespace Lesson12.Common.Src.Dto
             if (!Currency.Equals(that.Currency)) return false;
             if (!Market.Equals(that.Market)) return false;
 
-            return MessageType == that.MessageType;
+            return Type == that.Type;
         }
 
         public override int GetHashCode()
@@ -39,7 +43,7 @@ namespace Lesson12.Common.Src.Dto
             result = 31 * result + Data.GetHashCode();
             result = 31 * result + Currency.GetHashCode();
             result = 31 * result + Market.GetHashCode();
-            result = 31 * result + MessageType.GetHashCode();
+            result = 31 * result + Type.GetHashCode();
             return result;
         }
         public override string ToString()
@@ -49,28 +53,30 @@ namespace Lesson12.Common.Src.Dto
                     ", data=" + Data +
                     ", currency='" + Currency + '\'' +
                     ", market='" + Market + '\'' +
-                    ", type=" + MessageType +
+                    ", type=" + Type +
                     '}';
         }
 
         public static MessageDTO<float> Avg(float avg, string currency, string market)
         {
-            return new MessageDTO<float>(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), avg, currency, market, MessageDTO<float>.Type.AVG);
+            return new MessageDTO<float>(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), avg, currency, market, Type.AVG);
         }
 
         public static MessageDTO<float> Price(float price, string currency, string market)
         {
-            return new MessageDTO<float>(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), price, currency, market, MessageDTO<float>.Type.PRICE);
+            return new MessageDTO<float>(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), price, currency, market, Type.PRICE);
         }
 
         public static MessageDTO<MessageTrade> TradeMessage(long timestamp, float price, float amount, string currency, string market)
         {
-            return new MessageDTO<MessageTrade>(timestamp, new MessageTrade(price, amount), currency, market, MessageDTO<MessageTrade>.Type.TRADE);
+            return new MessageDTO<MessageTrade>(timestamp, new MessageTrade(price, amount), currency, market, Type.TRADE);
         }
 
-        public enum Type
-        {
-            PRICE, AVG, TRADE
-        }
+        
+    }
+    
+    public enum Type
+    {
+        PRICE, AVG, TRADE
     }
 }

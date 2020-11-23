@@ -26,6 +26,7 @@ using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Serialization;
 
 namespace Lesson12
 {
@@ -47,11 +48,13 @@ namespace Lesson12
             services.AddTransient<IPriceService, DefaultPriceService>();
             services.AddTransient<IMessageUnpacker, PriceMessageUnpacker>();
             services.AddTransient<IMessageUnpacker, TradeMessageUnpacker>();
-            services.AddTransient<ITradeRepository>(sp => 
-                new H2TradeRepository(sp.GetService<ILogger<H2TradeRepository>>(), Configuration.GetConnectionString("TradesContext"))); // !!!
-            services.AddTransient<ITradeRepository>(sp =>
-                new MongoTradeRepository(sp.GetService<ILogger<MongoTradeRepository>>(), new MongoClient("mongodb://localhost:27017"))); // !!!
-            services.AddTransient<ITradeService, DefaultTradeService>();
+            // services.AddTransient<ITradeRepository>(sp =>
+            //     new H2TradeRepository(sp.GetService<ILogger<H2TradeRepository>>(),
+            //         Configuration.GetConnectionString("TradesContext"))); // !!!
+            // services.AddTransient<ITradeRepository>(sp =>
+            //     new MongoTradeRepository(sp.GetService<ILogger<MongoTradeRepository>>(),
+            //         new MongoClient("mongodb://localhost:27017"))); // !!!
+            // services.AddTransient<ITradeService, DefaultTradeService>();
             services.AddTransient<WSHandler>();
         }
 
@@ -65,46 +68,60 @@ namespace Lesson12
 
             var serviceScopeFactory = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>();
             var serviceProvider = serviceScopeFactory.CreateScope().ServiceProvider;
+            var serializerSettings = new JsonSerializerSettings();
+            serializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();;
 
-            app.UseWebSockets();
-            app.Use(async (context, next) =>
-            {
-                if (context.Request.Path == "/stream")
+            WSHandler wsHandler = serviceProvider.GetService<WSHandler>();
+            app
+                .UseWebSockets()
+                .Use(async (context, next) =>
                 {
-                    if (context.WebSockets.IsWebSocketRequest)
+                    if (context.Request.Path == "/stream")
                     {
-                        using (WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync())
+                        if (context.WebSockets.IsWebSocketRequest)
                         {
-                            WSHandler wsHandler = serviceProvider.GetService<WSHandler>();
+                            Console.Out.WriteLine(context.Request.Path);
+                            WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                            
 
                             var buffer = new byte[1024 * 4];
+                            // webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None)
+                            //    .ToObservable()
+                            //    .SelectMany(result => Observable.Return(Encoding.UTF8.GetString(buffer, 0, result.Count)))
+                            //    .Do(onNext: m => buffer = new byte[1024 * 4])
+                            //    .Let(wsHandler.Handle)
+                            //    .Select(m => JsonConvert.SerializeObject(m))
+                            //    .Select(m =>
+                            //    {
+                            //        byte[] output = Encoding.UTF8.GetBytes(m as string);
+                            //
+                            //        return webSocket.SendAsync(new ArraySegment<byte>(output, 0, output.Length), WebSocketMessageType.Text, false, CancellationToken.None);
+                            //    })
+                            //    .Subscribe(onNext: t => Debug.WriteLine("Received"));
 
-                            webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None)
-                               .ToObservable()
-                               .SelectMany(result => Observable.Return(Encoding.UTF8.GetString(buffer, 0, result.Count)))
-                               .Do(onNext: m => buffer = new byte[1024 * 4])
-                               .Let(wsHandler.Handle)
-                               .Select(m => JsonConvert.SerializeObject(m))
-                               .Select(m =>
-                               {
-                                   byte[] output = Encoding.UTF8.GetBytes(m as string);
+                            await wsHandler.Handle()
+                                .Select(m => JsonConvert.SerializeObject(m, serializerSettings))
+                                .Do(async m =>
+                                {
+                                    Console.WriteLine(m);
+                                    byte[] output = Encoding.UTF8.GetBytes(m);
 
-                                   return webSocket.SendAsync(new ArraySegment<byte>(output, 0, output.Length), WebSocketMessageType.Text, false, CancellationToken.None);
-                               })
-                               .Subscribe(onNext: t => Debug.WriteLine("Received"));
+                                    await webSocket.SendAsync(new ArraySegment<byte>(output, 0, output.Length),
+                                        WebSocketMessageType.Text, true, CancellationToken.None);
+                                })
+                                .LastAsync();
                         }
+                        else
+                        {
+                            context.Response.StatusCode = 400;
+                        }
+                        
                     }
                     else
                     {
-                        context.Response.StatusCode = 400;
+                        await next();
                     }
-                }
-                else
-                {
-                    await next();
-                }
-
-            });
+                });
             //app.MapWebSocketManager("/stream", serviceProvider.GetService<WSHandler>());
             app.UseStaticFiles();
 
