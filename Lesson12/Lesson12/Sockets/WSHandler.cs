@@ -13,16 +13,16 @@ namespace Lesson12.Sockets
     public class WSHandler : WebSocketHandler
 	{
 		private readonly IPriceService _priceService;
-		// private readonly ITradeService _tradeService;
+		private readonly ITradeService _tradeService;
 
 		public WSHandler(
 			ConnectionManager webSocketConnectionManager, 
-			IPriceService priceService/*, 
-			ITradeService tradeService*/) 
+			IPriceService priceService, 
+			ITradeService tradeService) 
 			: base(webSocketConnectionManager)
 		{
 			_priceService = priceService;
-			// _tradeService = tradeService;
+			_tradeService = tradeService;
 		}
 
 		public override IObservable<Task> ReceiveAsync(WebSocket socket, WebSocketReceiveResult result, byte[] buffer)
@@ -36,12 +36,11 @@ namespace Lesson12.Sockets
 		}
 
 		[HttpGet]
-		public IObservable<dynamic> Handle()
+		public IObservable<dynamic> Handle(IObservable<string> inbound)
 		{
             return Observable.Merge<dynamic>(
-				_priceService.PricesStream(Observable.Never<long>())
-					.Do(onNext: m => Console.Out.WriteLine($"Sending Message: {m}"))/*,
-                _tradeService.TradesStream()*/);
+				_priceService.PricesStream(inbound.Let(HandleRequestedAveragePriceIntervalValue)),
+                _tradeService.TradesStream());
 		}
 
 		private static IObservable<long> HandleRequestedAveragePriceIntervalValue(IObservable<string> requestedInterval)

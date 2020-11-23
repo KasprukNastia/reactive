@@ -11,7 +11,7 @@
             Counter = counter;
         }
 
-        public Sum Add(float Value) => new Sum(Value + Value, Counter + 1);
+        public Sum Add(float Value) => new Sum(this.Value + Value, Counter + 1);
 
         public float Avg() => Value / Counter;
 

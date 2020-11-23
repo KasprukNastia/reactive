@@ -32,6 +32,7 @@ namespace Lesson12.Crypto_Service.Src.Service.External
 
                 Func<Task> closeSocket = async () =>
                 {
+                    taskCompletionSource.SetCanceled();
                     await socket.DisconnectAsync();
                     _logger.LogInformation("[EXTERNAL-SERVICE] Connection to CryptoCompare.com closed");
                 };
@@ -63,7 +64,6 @@ namespace Lesson12.Crypto_Service.Src.Service.External
                             }
                             catch (Exception e)
                             {
-                                Console.Error.WriteLine(e);
                                 sink.OnError(e);
                                 await closeSocket.Invoke();
                             }
