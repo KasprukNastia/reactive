@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Lesson12.Crypto_Service.Src.Service.External.Utils
@@ -39,7 +40,7 @@ namespace Lesson12.Crypto_Service.Src.Service.External.Utils
             string[] valuesArray = message.Split("~");
             int valuesArrayLenght = valuesArray.Length;
             string mask = valuesArray[valuesArrayLenght - 1];
-            int maskInt = int.Parse(mask);
+            int maskInt = int.Parse(mask, NumberStyles.HexNumber);
             Dictionary<string, object> unpackedCurrent = new Dictionary<string, object>();
             int[] currentField = { 0 };
             FIELDS.ToList().ForEach(t => {
@@ -54,7 +55,7 @@ namespace Lesson12.Crypto_Service.Src.Service.External.Utils
                 {
                     //i know this is a hack, for cccagg, future code please don't hate me:(, i did this to avoid
                     //subscribing to trades as well in order to show the last market
-                    if (k.Equals("LASTMARKET"))
+                    if (k.Equals("LASTMARKET") || k.Equals("LASTTRADEID"))
                     {
                         unpackedCurrent.Add(k, valuesArray[currentField[0]]);
                     }

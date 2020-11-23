@@ -13,32 +13,35 @@ namespace Lesson12.Sockets
     public class WSHandler : WebSocketHandler
 	{
 		private readonly IPriceService _priceService;
-		private readonly ITradeService _tradeService;
+		// private readonly ITradeService _tradeService;
 
 		public WSHandler(
 			ConnectionManager webSocketConnectionManager, 
-			IPriceService priceService, 
-			ITradeService tradeService) 
+			IPriceService priceService/*, 
+			ITradeService tradeService*/) 
 			: base(webSocketConnectionManager)
 		{
 			_priceService = priceService;
-			_tradeService = tradeService;
+			// _tradeService = tradeService;
 		}
 
 		public override IObservable<Task> ReceiveAsync(WebSocket socket, WebSocketReceiveResult result, byte[] buffer)
 		{
-			return Observable.Return(Encoding.UTF8.GetString(buffer, 0, result.Count))
-					.Let(Handle)
-					.Select(m => JsonConvert.SerializeObject(m))
-					.Select(async m => await SendMessageToAllAsync(m as string));
+			// return
+			// 		.Let(Handle)
+			// 		.Select(m => JsonConvert.SerializeObject(m))
+			// 		.Select(async m => await SendMessageToAllAsync(m as string));
+
+			return Observable.Empty<Task>();
 		}
 
 		[HttpGet]
-		public IObservable<dynamic> Handle(IObservable<string> input)
+		public IObservable<dynamic> Handle()
 		{
             return Observable.Merge<dynamic>(
-				_priceService.PricesStream(input.Let(HandleRequestedAveragePriceIntervalValue)),
-                _tradeService.TradesStream());
+				_priceService.PricesStream(Observable.Never<long>())
+					.Do(onNext: m => Console.Out.WriteLine($"Sending Message: {m}"))/*,
+                _tradeService.TradesStream()*/);
 		}
 
 		private static IObservable<long> HandleRequestedAveragePriceIntervalValue(IObservable<string> requestedInterval)

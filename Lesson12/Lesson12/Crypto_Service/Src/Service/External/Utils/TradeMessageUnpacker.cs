@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Lesson12.Crypto_Service.Src.Service.External.Utils
@@ -25,7 +26,7 @@ namespace Lesson12.Crypto_Service.Src.Service.External.Utils
             string[] valuesArray = message.Split("~");
             int valuesArrayLenght = valuesArray.Length;
             string mask = valuesArray[valuesArrayLenght - 1];
-            int maskInt = int.Parse(mask);
+            int maskInt = int.Parse(mask, NumberStyles.HexNumber);
             Dictionary<string, object> unpackedTrade = new Dictionary<string, object>();
             int[] currentField = { 0 };
 

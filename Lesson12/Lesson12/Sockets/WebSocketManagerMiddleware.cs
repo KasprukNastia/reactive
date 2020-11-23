@@ -23,6 +23,7 @@ namespace Lesson12.Sockets
 
         public async Task Invoke(HttpContext context)
         {
+            Console.Out.WriteLine("There");
             if (!context.WebSockets.IsWebSocketRequest)
                 return;
 

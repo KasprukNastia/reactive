@@ -17,6 +17,7 @@ namespace Lesson12.Sockets
 
         public virtual async Task OnConnected(WebSocket socket)
         {
+            Console.Out.WriteLine("Here");
             WebSocketConnectionManager.AddSocket(socket);
         }
 

@@ -19,16 +19,18 @@ namespace Lesson12.Crypto_Service.Src.Service.External
 
         public CryptoCompareService(ILogger<CryptoCompareClient> logger, IEnumerable<IMessageUnpacker> messageUnpackers)
         {
-            _connectedClient = new CryptoCompareClient(logger)
+            _connectedClient = ProvideCaching(new CryptoCompareClient(logger)
                     .Connect(
                         new List<string> { "5~CCCAGG~BTC~USD", "0~Coinbase~BTC~USD", "0~Cexio~BTC~USD" }.ToObservable(),
                         messageUnpackers.ToList()
-                    );
+                    )
+                    // .Let(ProvideResilience)
+                    .Do(m => Console.Out.WriteLine($"CryptoCompareService: Getting message: {m}")));
         }
 
         public IObservable<Dictionary<string, object>> EventsStream()
         {
-            return _connectedClient.Let(ProvideResilience).Let(ProvideCaching);
+            return _connectedClient;
         }
 
         // TODO: implement resilience such as retry with delay
@@ -40,9 +42,11 @@ namespace Lesson12.Crypto_Service.Src.Service.External
         // TODO: implement caching of 3 last elements & multi subscribers support
         public static IObservable<T> ProvideCaching<T>(IObservable<T> input)
         {
-            ReplaySubject<T> subject = new ReplaySubject<T>(bufferSize: 3);
-            input.Subscribe(subject);
-            return subject;
+            
+            var connectableObservable = input.Multicast(new ReplaySubject<T>(3));
+            connectableObservable.Connect();
+
+            return connectableObservable;
         }
     }
 }
