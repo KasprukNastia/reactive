@@ -59,11 +59,12 @@ namespace Lesson12.Crypto_Service.Src.Service.External
                         {
                             try
                             {
-                                // Console.Out.WriteLine(message);
                                 sink.OnNext(unpacker.Unpack(message));
                             }
                             catch (Exception e)
                             {
+                                _logger.LogError($"ERROR: {e.Message}");
+                                _logger.LogError($"{e.StackTrace}");
                                 sink.OnError(e);
                                 await closeSocket.Invoke();
                             }

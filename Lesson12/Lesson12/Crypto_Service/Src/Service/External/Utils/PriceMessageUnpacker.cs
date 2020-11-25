@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
@@ -61,7 +62,9 @@ namespace Lesson12.Crypto_Service.Src.Service.External.Utils
                     }
                     else
                     {
-                        unpackedCurrent.Add(k, float.Parse(valuesArray[currentField[0]]));
+                        CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+                        ci.NumberFormat.CurrencyDecimalSeparator = ".";
+                        unpackedCurrent.Add(k, float.Parse(valuesArray[currentField[0]].Trim(), NumberStyles.Any, ci));
                     }
                     currentField[0]++;
                 }

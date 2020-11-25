@@ -40,7 +40,9 @@ namespace Lesson12.Crypto_Service.Src.Service.External.Utils
                 }
                 else if ((maskInt & v) > 0)
                 {
-                    unpackedTrade.Add(k, float.Parse(valuesArray[currentField[0]]));
+                    CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
+                    ci.NumberFormat.CurrencyDecimalSeparator = ".";
+                    unpackedTrade.Add(k, float.Parse(valuesArray[currentField[0]].Trim(), NumberStyles.Any, ci));
                     currentField[0]++;
                 }
             });

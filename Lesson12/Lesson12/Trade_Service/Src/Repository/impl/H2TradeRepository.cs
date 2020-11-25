@@ -119,12 +119,14 @@ namespace Lesson12.Trade_Service.Src.Repository.impl
             // TODO: Return the amount of stored rows
 
             int affectedRows = 0;
-                using SqlConnection con = new SqlConnection(_connectionString);
+            using SqlConnection con = new SqlConnection(_connectionString);
             con.Open();
-                using SqlTransaction trans = con.BeginTransaction();
+            using SqlTransaction trans = con.BeginTransaction();
 
-                foreach (var param in BuildInsertStatement(trades))
-                    affectedRows += con.Execute(INSERT_TRADE_QUERY, param.Value, trans);
+            foreach (var param in BuildInsertStatement(trades))
+                affectedRows += con.Execute(INSERT_TRADE_QUERY, param.Value, trans);
+
+            trans.Commit();
 
             return Observable.Return(affectedRows);
         }
