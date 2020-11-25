@@ -72,8 +72,6 @@ namespace Lesson12.Trade_Service.Src.Service.impl
 				{
 					List<Trade> tradesList = trades.ToList();
 
-					Console.WriteLine($"TRADES COUNT: {trades.Count}");
-
 					return SafetySave(tradeRepository1, tradesList)
 						.Merge(SafetySave(tradeRepository2, tradesList))
 						.Do(onNext: i => { }, onCompleted: () => helperSubject.OnNext(new object()));
