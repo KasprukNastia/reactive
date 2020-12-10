@@ -26,6 +26,9 @@ namespace AuthAPI.Controllers
             _userRegistrator = userRegistrator ?? throw new ArgumentNullException(nameof(userRegistrator));
         }
 
+        /// <summary>
+        /// Реєстрація користувача
+        /// </summary>
         [HttpPost,
         Produces(MediaTypeNames.Application.Json),
         Consumes(MediaTypeNames.Application.Json),

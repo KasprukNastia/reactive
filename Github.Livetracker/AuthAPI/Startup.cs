@@ -31,14 +31,13 @@ namespace AuthAPI
             services.AddScoped<ITokenHasher, TokenHasher>();
             services.AddScoped<IUserRegistrator, UserRegistrator>();
 
-            services.AddSwaggerDocument(conf =>
+            services.AddOpenApiDocument(conf =>
             {
                 conf.AllowReferencesWithProperties = true;
                 conf.AlwaysAllowAdditionalObjectProperties = true;
 
                 conf.PostProcess = doc =>
                 {
-                    doc.Info.Version = "v1";
                     doc.Info.Title = "Registration for github-livetracker";
                     doc.Info.Description = "Registration service for github-livetracker";
                 };
@@ -69,6 +68,7 @@ namespace AuthAPI
             {
                 conf.DocumentTitle = "Registration for github-livetracker";
             });
+            app.UseOpenApi();
         }
     }
 }
