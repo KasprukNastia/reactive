@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuthAPI", "AuthAPI\AuthAPI.csproj", "{DA80797A-31FC-4D4D-9C12-BF5837FCC1EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AuthAPI", "AuthAPI\AuthAPI.csproj", "{DA80797A-31FC-4D4D-9C12-BF5837FCC1EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UsersLivetrackerConfigDAL", "UsersLivetrackerConfigDAL\UsersLivetrackerConfigDAL.csproj", "{6ADEC995-625D-4010-BCA0-C73F3664F313}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UsersLivetrackerConfigDAL", "UsersLivetrackerConfigDAL\UsersLivetrackerConfigDAL.csproj", "{6ADEC995-625D-4010-BCA0-C73F3664F313}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SettingsProxyAPI", "SettingsProxyAPI\SettingsProxyAPI.csproj", "{63265949-01F7-43F8-A8B8-E5D9A0B83A3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{6ADEC995-625D-4010-BCA0-C73F3664F313}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6ADEC995-625D-4010-BCA0-C73F3664F313}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6ADEC995-625D-4010-BCA0-C73F3664F313}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63265949-01F7-43F8-A8B8-E5D9A0B83A3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63265949-01F7-43F8-A8B8-E5D9A0B83A3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63265949-01F7-43F8-A8B8-E5D9A0B83A3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63265949-01F7-43F8-A8B8-E5D9A0B83A3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

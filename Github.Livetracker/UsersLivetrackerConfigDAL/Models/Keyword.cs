@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace UsersLivetrackerConfigDAL.Models
 {
@@ -10,9 +11,6 @@ namespace UsersLivetrackerConfigDAL.Models
         [MaxLength(500)]
         public string Word { get; set; }
 
-        [Required]
-        public int UserId { get; set; }
-
-        public User User { get; set; }
+        public List<User> Users { get; set; }
     }
 }
