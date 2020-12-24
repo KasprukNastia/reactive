@@ -9,6 +9,6 @@ namespace UsersLivetrackerConfigDAL.Repos.Interfaces
         Task<int> AddUserAsync(User user);
         Task<int> AddKeywordForUserAsync(string keyword, int userId);
         Task<User> GetUserByHashedTokenAsync(string hashedToken);
-        Task<List<Keyword>> GetAllUserKeywords(int userId);
+        IAsyncEnumerable<Keyword> GetAllUserKeywords(int userId);
     }
 }

@@ -49,12 +49,12 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
                 .FirstOrDefaultAsync();
         }
 
-        public Task<List<Keyword>> GetAllUserKeywords(int userId)
+        public IAsyncEnumerable<Keyword> GetAllUserKeywords(int userId)
         {
             return _dbContext.Users.Where(u => u.UserId == userId)
                 .Include(u => u.Keywords)
                 .SelectMany(u => u.Keywords)
-                .ToListAsync();
+                .AsAsyncEnumerable();
         }
     }
 }

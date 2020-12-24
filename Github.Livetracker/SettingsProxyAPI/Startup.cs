@@ -4,13 +4,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using SettingsProxyAPI.AppCode.Auth;
 using SettingsProxyAPI.AppCode.Swagger;
 using SettingsProxyAPI.Business.Impl;
 using SettingsProxyAPI.Business.Interfaces;
 using SettingsProxyAPI.Models;
+using System;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
+using System.Text;
+using System.Threading;
 using UsersLivetrackerConfigDAL;
 using UsersLivetrackerConfigDAL.Repos.Impl;
 using UsersLivetrackerConfigDAL.Repos.Interfaces;
@@ -77,13 +81,27 @@ namespace SettingsProxyAPI
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
 
-                        await Observable.Create<KeywordInfo>(async observer =>
-                        {
-                            IUserKeywordsManager userKeywordsManager = app.ApplicationServices.GetService<IUserKeywordsManager>();
-                            var res = await userKeywordsManager.OnUserConnected(int.Parse(context.User.Identity.Name));
-                            // TODO: Complete logic
-                        })
-                        .LastAsync();
+                        IUserKeywordsManager userKeywordsManager = app.ApplicationServices.GetService<IUserKeywordsManager>();
+                        IKeywordProvider keywordProvider = app.ApplicationServices.GetService<IKeywordProvider>();
+                        
+                        await Observable.Merge(
+                            userKeywordsManager.OnUserConnected(int.Parse(context.User.Identity.Name)),
+                            Observable.Create<string>(async observer =>
+                            {
+
+                                var buffer = new byte[1024 * 4];
+                                WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                                KeywordRequest receivedRequest;
+                                while (!result.EndOfMessage)
+                                {
+                                    buffer = new byte[1024 * 4];
+                                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                                    receivedRequest = JsonConvert.DeserializeObject<KeywordRequest>(Encoding.UTF8.GetString(buffer, 0, result.Count));
+                                    observer.OnNext(receivedRequest.Keyword);
+                                }
+                            })
+                            .SelectMany(k => keywordProvider.GetOneKeyword(k)))
+                            .LastAsync();
                     }
                 }
             });
