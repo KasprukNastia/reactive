@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using SettingsProxyAPI.Business.Interfaces;
 using SettingsProxyAPI.Models;
 using System;
 using System.Collections.Generic;
@@ -12,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SettingsProxyAPI.Business.Impl
+namespace SettingsProxyAPI.Keywords
 {
     public class KeywordProvider : IKeywordProvider
     {

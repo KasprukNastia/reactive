@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Principal;
 
-namespace SettingsProxyAPI.AppCode.Auth
+namespace SettingsProxyAPI.Auth
 {
     public class UserIdentity : IIdentity
     {

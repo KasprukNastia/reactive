@@ -1,7 +1,7 @@
 ﻿using SettingsProxyAPI.Models;
 using System;
 
-namespace SettingsProxyAPI.Business.Interfaces
+namespace SettingsProxyAPI.Keywords
 {
     public interface IKeywordProvider
     {
