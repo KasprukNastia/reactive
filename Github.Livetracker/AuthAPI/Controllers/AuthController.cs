@@ -1,8 +1,7 @@
-﻿using AuthAPI.AppCode.Interfaces;
-using AuthAPI.Models;
+﻿using AuthAPI.Models;
+using AuthAPI.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using NSwag.Annotations;
 using System;
 using System.Net.Mime;
@@ -15,14 +14,10 @@ namespace AuthAPI.Controllers
     Route("api/auth")]
     public class AuthController : ControllerBase
     {
-        private readonly ILogger<AuthController> _logger;
         private readonly IUserRegistrator _userRegistrator;
 
-        public AuthController(
-            ILogger<AuthController> logger, 
-            IUserRegistrator userRegistrator)
+        public AuthController(IUserRegistrator userRegistrator)
         {
-            _logger = logger;
             _userRegistrator = userRegistrator ?? throw new ArgumentNullException(nameof(userRegistrator));
         }
 

@@ -5,6 +5,6 @@ namespace UsersLivetrackerConfigDAL.Repos.Interfaces
 {
     public interface IKeywordRepository
     {
-        Task<bool> TryAddKeywordAsync(Keyword keyword);
+        bool TryAddKeyword(Keyword keyword);
     }
 }

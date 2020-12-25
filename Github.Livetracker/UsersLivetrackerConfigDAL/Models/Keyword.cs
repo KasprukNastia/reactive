@@ -11,6 +11,14 @@ namespace UsersLivetrackerConfigDAL.Models
         [MaxLength(500)]
         public string Word { get; set; }
 
+        [Required]
+        [MaxLength(500)]
+        public string Source { get; set; }
+
+        [Required]
+        [MaxLength(500)]
+        public string ShaHash { get; set; }
+
         public List<User> Users { get; set; }
 
         public List<KeywordInfo> KeywordInfos { get; set; }

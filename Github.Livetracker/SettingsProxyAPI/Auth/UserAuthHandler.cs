@@ -34,7 +34,9 @@ namespace SettingsProxyAPI.Auth
                     byte[] hashedTokenBytes = algorithm.Hash(Encoding.UTF8.GetBytes(accessToken));
                     string hashedToken = Convert.ToBase64String(hashedTokenBytes);
 
-                    observer.OnNext(await _userRepository.GetUserByHashedTokenAsync(hashedToken));
+                    User user = await _userRepository.GetUserByHashedTokenAsync(hashedToken);
+
+                    observer.OnNext(user);
                 })
                 .Do(
                     onNext: user => context.User.AddIdentity(new ClaimsIdentity(new UserIdentity("SettingsAuth", user.Id))),

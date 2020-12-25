@@ -1,4 +1,4 @@
-﻿namespace AuthAPI.AppCode.Interfaces
+﻿namespace AuthAPI.Tokens
 {
     public interface ITokenGenerator
     {

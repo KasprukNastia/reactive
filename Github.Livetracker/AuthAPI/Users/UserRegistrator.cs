@@ -1,11 +1,11 @@
-﻿using AuthAPI.AppCode.Interfaces;
-using AuthAPI.Models;
+﻿using AuthAPI.Models;
+using AuthAPI.Tokens;
 using System;
 using System.Threading.Tasks;
 using UsersLivetrackerConfigDAL.Models;
 using UsersLivetrackerConfigDAL.Repos.Interfaces;
 
-namespace AuthAPI.AppCode.Impl
+namespace AuthAPI.Users
 {
     public class UserRegistrator : IUserRegistrator
     {

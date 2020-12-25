@@ -18,13 +18,13 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
             _dbContext = _serviceScope.ServiceProvider.GetService<UsersLivetrackerContext>();
         }
 
-        public async Task<bool> TryAddKeywordAsync(Keyword keyword)
+        public bool TryAddKeyword(Keyword keyword)
         {
-            if (!_dbContext.Keywords.Any(k => k.Word.Equals(keyword)))
+            if (_dbContext.Keywords.Any(k => k.Word.Equals(keyword)))
                 return false;
 
             _dbContext.Keywords.Add(keyword);
-            return await _dbContext.SaveChangesAsync() > 0;
+            return _dbContext.SaveChanges() > 0;
         }
 
         #region IDisposable

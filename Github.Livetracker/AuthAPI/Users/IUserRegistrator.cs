@@ -1,7 +1,7 @@
 ﻿using AuthAPI.Models;
 using System.Threading.Tasks;
 
-namespace AuthAPI.AppCode.Interfaces
+namespace AuthAPI.Users
 {
     public interface IUserRegistrator
     {

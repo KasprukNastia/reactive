@@ -1,5 +1,5 @@
-using AuthAPI.AppCode.Impl;
-using AuthAPI.AppCode.Interfaces;
+using AuthAPI.Tokens;
+using AuthAPI.Users;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +27,7 @@ namespace AuthAPI
                 options => options.UseSqlServer(Configuration.GetConnectionString("UsersLivetrackerConnection")));
 
             services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<ITokenGenerator>(sp => new TokenGenerator(Configuration["Secret"]));
+            services.AddScoped<ITokenGenerator, TokenGenerator>();
             services.AddScoped<ITokenHasher, TokenHasher>();
             services.AddScoped<IUserRegistrator, UserRegistrator>();
 

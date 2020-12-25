@@ -1,9 +1,8 @@
-﻿using AuthAPI.AppCode.Interfaces;
-using NSec.Cryptography;
+﻿using NSec.Cryptography;
 using System;
 using System.Text;
 
-namespace AuthAPI.AppCode.Impl
+namespace AuthAPI.Tokens
 {
     public class TokenHasher : ITokenHasher
     {

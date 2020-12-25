@@ -49,10 +49,10 @@ namespace SettingsProxyAPI.Keywords
                             _keywordProvider.GetListKeywords(userKeywords),
                             Observable.Create<string>(async observer =>
                             {
-                                var buffer = new byte[1024 * 4];
-                                WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                                byte[] buffer;
+                                WebSocketReceiveResult result;
                                 KeywordRequest receivedRequest;
-                                while (!result.EndOfMessage)
+                                while (webSocket.State == WebSocketState.Open)
                                 {
                                     buffer = new byte[1024 * 4];
                                     result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);

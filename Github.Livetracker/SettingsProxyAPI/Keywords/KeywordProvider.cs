@@ -1,14 +1,10 @@
-﻿using Newtonsoft.Json;
-using SettingsProxyAPI.Models;
+﻿using SettingsProxyAPI.Models;
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
-using System.Net.WebSockets;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Reactive.Threading.Tasks;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using TableDependency.SqlClient;
 using TableDependency.SqlClient.Base.Enums;
@@ -27,7 +23,7 @@ namespace SettingsProxyAPI.Keywords
         private readonly IKeywordRepository _keywordRepository;
 
         private readonly Subject<KeywordOutput> _allKeywordOutputsSubject;
-        private readonly Dictionary<string, IObservable<KeywordOutput>> _keywordsDict;
+        private readonly ConcurrentDictionary<string, IObservable<KeywordOutput>> _keywordsDict;
 
         public KeywordProvider(string dbConnStr,
             IKeywordRepository keywordRepository)
@@ -42,7 +38,7 @@ namespace SettingsProxyAPI.Keywords
             _tableDependency.Start();
 
             _allKeywordOutputsSubject = new Subject<KeywordOutput>();
-            _keywordsDict = new Dictionary<string, IObservable<KeywordOutput>>();
+            _keywordsDict = new ConcurrentDictionary<string, IObservable<KeywordOutput>>();
         }
 
         public IObservable<KeywordOutput> GetListKeywords(IObservable<string> keywords) =>
@@ -53,18 +49,13 @@ namespace SettingsProxyAPI.Keywords
             if (_keywordsDict.TryGetValue(keyword, out IObservable<KeywordOutput> keywordSubject))
                 return keywordSubject;
 
-            keywordSubject = AddKeywordToObserveAsync(keyword).ToObservable().Merge();
-            
-            _keywordsDict.Add(keyword, keywordSubject);
+            _keywordRepository.TryAddKeyword(new Keyword { Word = keyword });
+
+            keywordSubject = _allKeywordOutputsSubject.Where(k => k.Keyword.Equals(keyword));
+
+            _keywordsDict.TryAdd(keyword, keywordSubject);
 
             return keywordSubject;
-        }
-
-        private async Task<IObservable<KeywordOutput>> AddKeywordToObserveAsync(string keyword)
-        {
-            await _keywordRepository.TryAddKeywordAsync(new Keyword { Word = keyword });
-
-            return _allKeywordOutputsSubject.Where(k => k.Keyword.Equals(keyword));
         }
 
         private void ListenChanges(object sender, RecordChangedEventArgs<KeywordInfo> e)
@@ -75,6 +66,7 @@ namespace SettingsProxyAPI.Keywords
             var keywordInfo = new KeywordOutput
             {
                 Keyword = e.Entity.Word,
+                Source = e.Entity.Source,
                 FileName = e.Entity.FileName,
                 RelativePath = e.Entity.RelativePath,
                 FileUrl = e.Entity.FileUrl,

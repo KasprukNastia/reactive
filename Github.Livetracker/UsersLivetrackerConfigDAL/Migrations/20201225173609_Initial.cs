@@ -2,7 +2,7 @@
 
 namespace UsersLivetrackerConfigDAL.Migrations
 {
-    public partial class InitialCreate : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -12,7 +12,9 @@ namespace UsersLivetrackerConfigDAL.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Word = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                    Word = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    ShaHash = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -40,6 +42,7 @@ namespace UsersLivetrackerConfigDAL.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Word = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     RelativePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     FileUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),

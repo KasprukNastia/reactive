@@ -12,6 +12,10 @@ namespace UsersLivetrackerConfigDAL.Models
 
         [Required]
         [MaxLength(500)]
+        public string Source { get; set; }
+
+        [Required]
+        [MaxLength(500)]
         public string FileName { get; set; }
 
         [MaxLength(500)]
