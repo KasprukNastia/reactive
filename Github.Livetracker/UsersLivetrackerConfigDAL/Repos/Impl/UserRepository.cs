@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,13 +9,15 @@ using UsersLivetrackerConfigDAL.Repos.Interfaces;
 
 namespace UsersLivetrackerConfigDAL.Repos.Impl
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository : IUserRepository, IDisposable
     {
+        private readonly IServiceScope _serviceScope;
         private readonly UsersLivetrackerContext _dbContext;
 
-        public UserRepository(UsersLivetrackerContext dbContext)
+        public UserRepository(IServiceScopeFactory scopeFactory)
         {
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _serviceScope = scopeFactory.CreateScope();
+            _dbContext = _serviceScope.ServiceProvider.GetService<UsersLivetrackerContext>();
         }
 
         public Task<int> AddUserAsync(User user)
@@ -25,7 +28,7 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
 
         public async Task<int> AddKeywordForUserAsync(string keyword, int userId)
         {
-            User user = await _dbContext.Users.Where(u => u.UserId == userId)
+            User user = await _dbContext.Users.Where(u => u.Id == userId)
                 .Include(u => u.Keywords).FirstOrDefaultAsync();
 
             if (user == null || user.Keywords.Any(keyword => keyword.Equals(keyword)))
@@ -51,10 +54,19 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
 
         public IAsyncEnumerable<Keyword> GetAllUserKeywords(int userId)
         {
-            return _dbContext.Users.Where(u => u.UserId == userId)
+            return _dbContext.Users.Where(u => u.Id == userId)
                 .Include(u => u.Keywords)
                 .SelectMany(u => u.Keywords)
                 .AsAsyncEnumerable();
         }
+
+        #region IDisposable
+
+        public void Dispose()
+        {
+            _serviceScope.Dispose();
+        }
+
+        #endregion
     }
 }

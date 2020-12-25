@@ -23,14 +23,16 @@ namespace SettingsProxyAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
+            string dbConnStr = Configuration.GetConnectionString("UsersLivetrackerConnection");
             services.AddDbContext<UsersLivetrackerContext>(
-                options => options.UseSqlServer(Configuration.GetConnectionString("UsersLivetrackerConnection")));
+                options => options.UseSqlServer(dbConnStr));
 
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IUserAuthHandler, UserAuthHandler>();
+            services.AddSingleton<IUserRepository, UserRepository>();
+            services.AddSingleton<IKeywordRepository, KeywordRepository>();
+            services.AddSingleton<IUserAuthHandler, UserAuthHandler>();
             
             services.AddSingleton<IKeywordProvider>(
-                sp => new KeywordProvider(remoteKeywordServiceUri: Configuration["RemoteKeywordServiceUri"]));
+                sp => new KeywordProvider(dbConnStr, sp.GetService<IKeywordRepository>()));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

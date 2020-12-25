@@ -10,66 +10,88 @@ using System.Reactive.Threading.Tasks;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TableDependency.SqlClient;
+using TableDependency.SqlClient.Base.Enums;
+using TableDependency.SqlClient.Base.EventArgs;
+using UsersLivetrackerConfigDAL;
+using UsersLivetrackerConfigDAL.Models;
+using UsersLivetrackerConfigDAL.Repos.Interfaces;
 
 namespace SettingsProxyAPI.Keywords
 {
-    public class KeywordProvider : IKeywordProvider
+    public class KeywordProvider : IKeywordProvider, IDisposable
     {
-        private readonly string _remoteKeywordServiceUri;
-        private readonly int _keywordsBufferSize;
+        private readonly string _dbConnStr;
+        private readonly SqlTableDependency<KeywordInfo> _tableDependency;
 
-        private readonly Dictionary<string, IObservable<KeywordInfo>> _keywordsDict;
+        private readonly IKeywordRepository _keywordRepository;
 
-        public KeywordProvider(
-            string remoteKeywordServiceUri, 
-            int keywordsBufferSize = 20)
+        private readonly Subject<KeywordOutput> _allKeywordOutputsSubject;
+        private readonly Dictionary<string, IObservable<KeywordOutput>> _keywordsDict;
+
+        public KeywordProvider(string dbConnStr,
+            IKeywordRepository keywordRepository)
         {
-            if (!Uri.IsWellFormedUriString(remoteKeywordServiceUri, UriKind.Absolute))
-                throw new UriFormatException($"Bad formed URI {remoteKeywordServiceUri}");
+            if (string.IsNullOrWhiteSpace(dbConnStr))
+                throw new ArgumentNullException(nameof(dbConnStr));
 
-            _remoteKeywordServiceUri = remoteKeywordServiceUri;
-            _keywordsBufferSize = keywordsBufferSize;
-            _keywordsDict = new Dictionary<string, IObservable<KeywordInfo>>();
+            _dbConnStr = dbConnStr;
+            _keywordRepository = keywordRepository ?? throw new ArgumentNullException(nameof(keywordRepository));
+            _tableDependency = new SqlTableDependency<KeywordInfo>(_dbConnStr, nameof(UsersLivetrackerContext.KeywordInfos));
+            _tableDependency.OnChanged += ListenChanges;
+            _tableDependency.Start();
+
+            _allKeywordOutputsSubject = new Subject<KeywordOutput>();
+            _keywordsDict = new Dictionary<string, IObservable<KeywordOutput>>();
         }
 
-        public IObservable<KeywordInfo> GetListKeywords(IObservable<string> keywords) =>
+        public IObservable<KeywordOutput> GetListKeywords(IObservable<string> keywords) =>
             keywords.Select(k => GetOneKeyword(k)).Merge();
 
-        public IObservable<KeywordInfo> GetOneKeyword(string keyword)
+        public IObservable<KeywordOutput> GetOneKeyword(string keyword)
         {
-            if (_keywordsDict.TryGetValue(keyword, out IObservable<KeywordInfo> keywordSubject))
+            if (_keywordsDict.TryGetValue(keyword, out IObservable<KeywordOutput> keywordSubject))
                 return keywordSubject;
 
-            keywordSubject = GetKeywordSubjectFromRemote(keyword).ToObservable().Merge();
+            keywordSubject = AddKeywordToObserveAsync(keyword).ToObservable().Merge();
             
             _keywordsDict.Add(keyword, keywordSubject);
 
             return keywordSubject;
         }
 
-        private async Task<IObservable<KeywordInfo>> GetKeywordSubjectFromRemote(string keyword)
+        private async Task<IObservable<KeywordOutput>> AddKeywordToObserveAsync(string keyword)
         {
-            using ClientWebSocket ws = new ClientWebSocket();
-            await ws.ConnectAsync(new Uri($"{_remoteKeywordServiceUri}?keyword={keyword}"), CancellationToken.None);
+            await _keywordRepository.TryAddKeywordAsync(new Keyword { Word = keyword });
 
-            IObservable<KeywordInfo> keywordInfoObservable = Observable.Create<KeywordInfo>(async observer =>
-            {
-                var buffer = new byte[1024 * 4];
-                WebSocketReceiveResult result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                string receivedJson;
-                while (!result.EndOfMessage)
-                {
-                    buffer = new byte[1024 * 4];
-                    result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                    receivedJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                    observer.OnNext(JsonConvert.DeserializeObject<KeywordInfo>(receivedJson));
-                }
-            });
-
-            var replaySubject = new ReplaySubject<KeywordInfo>(bufferSize: _keywordsBufferSize);
-            keywordInfoObservable.Subscribe(replaySubject);
-
-            return replaySubject;
+            return _allKeywordOutputsSubject.Where(k => k.Keyword.Equals(keyword));
         }
+
+        private void ListenChanges(object sender, RecordChangedEventArgs<KeywordInfo> e)
+        {
+            if (e.ChangeType != ChangeType.Insert)
+                return;
+
+            var keywordInfo = new KeywordOutput
+            {
+                Keyword = e.Entity.Word,
+                FileName = e.Entity.FileName,
+                RelativePath = e.Entity.RelativePath,
+                FileUrl = e.Entity.FileUrl,
+                RepositoryUrl = e.Entity.RepositoryUrl
+            };
+
+            _allKeywordOutputsSubject.OnNext(keywordInfo);
+        }
+
+        #region IDisposable
+
+        public void Dispose()
+        {
+            _tableDependency.Stop();
+            _tableDependency.Dispose();
+        }
+
+        #endregion
     }
 }

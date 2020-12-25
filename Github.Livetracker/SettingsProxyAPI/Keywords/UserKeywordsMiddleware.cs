@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using SettingsProxyAPI.Auth;
-using SettingsProxyAPI.Business.Interfaces;
 using SettingsProxyAPI.Models;
 using System;
 using System.Linq;
@@ -43,7 +42,7 @@ namespace SettingsProxyAPI.Keywords
                     .SelectMany(user =>
                     {
                         IObservable<string> userKeywords =
-                            AsyncEnumerable.ToObservable(_userRepository.GetAllUserKeywords(user.UserId))
+                            AsyncEnumerable.ToObservable(_userRepository.GetAllUserKeywords(user.Id))
                             .Select(k => k.Word);
 
                         return Observable.Merge(

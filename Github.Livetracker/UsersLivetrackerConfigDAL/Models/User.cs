@@ -5,7 +5,7 @@ namespace UsersLivetrackerConfigDAL.Models
 {
     public class User
     {
-        public int UserId { get; set; }
+        public int Id { get; set; }
 
         [Required]
         [MaxLength(500)]

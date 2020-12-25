@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using NSec.Cryptography;
-using SettingsProxyAPI.AppCode.Auth;
 using System;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
@@ -38,7 +37,7 @@ namespace SettingsProxyAPI.Auth
                     observer.OnNext(await _userRepository.GetUserByHashedTokenAsync(hashedToken));
                 })
                 .Do(
-                    onNext: user => context.User.AddIdentity(new ClaimsIdentity(new UserIdentity("SettingsAuth", user.UserId))),
+                    onNext: user => context.User.AddIdentity(new ClaimsIdentity(new UserIdentity("SettingsAuth", user.Id))),
                     onError: async exception => 
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
