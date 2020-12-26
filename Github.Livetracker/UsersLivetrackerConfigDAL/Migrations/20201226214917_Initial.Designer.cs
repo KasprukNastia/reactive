@@ -9,7 +9,7 @@ using UsersLivetrackerConfigDAL;
 namespace UsersLivetrackerConfigDAL.Migrations
 {
     [DbContext(typeof(UsersLivetrackerContext))]
-    [Migration("20201226111729_Initial")]
+    [Migration("20201226214917_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -95,6 +95,9 @@ namespace UsersLivetrackerConfigDAL.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("WasProcessed")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Word")
                         .IsRequired()

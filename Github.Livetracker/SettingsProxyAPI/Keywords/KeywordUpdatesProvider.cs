@@ -9,19 +9,29 @@ using TableDependency.SqlClient.Base.Enums;
 using TableDependency.SqlClient.Base.EventArgs;
 using UsersLivetrackerConfigDAL;
 using UsersLivetrackerConfigDAL.Models;
+using UsersLivetrackerConfigDAL.Repos.Interfaces;
 
 namespace SettingsProxyAPI.Keywords
 {
     public class KeywordUpdatesProvider : IKeywordUpdatesProvider, IDisposable
     {
+        private readonly IKeywordInfoRepository _keywordInfoRepository;
+
         private readonly string _dbConnStr;
         private readonly SqlTableDependency<KeywordInfo> _tableDependency;
 
-        private readonly Subject<KeywordOutput> _allKeywordOutputsSubject;
+        private readonly Subject<KeywordOutput> _allKeywordSequencesSubject;
         private readonly ConcurrentDictionary<string, IObservable<KeywordOutput>> _keywordsDict;
 
-        public KeywordUpdatesProvider(string dbConnStr)
+        private readonly Subject<int> _processedKeywordIds;
+
+        public KeywordUpdatesProvider(
+            IKeywordInfoRepository keywordInfoRepository, 
+            string dbConnStr,
+            int processedKeywordsBufferSize = 3)
         {
+            _keywordInfoRepository = keywordInfoRepository ?? throw new ArgumentNullException(nameof(keywordInfoRepository));
+
             if (string.IsNullOrWhiteSpace(dbConnStr))
                 throw new ArgumentNullException(nameof(dbConnStr));
 
@@ -30,8 +40,13 @@ namespace SettingsProxyAPI.Keywords
             _tableDependency.OnChanged += ListenChanges;
             _tableDependency.Start();
 
-            _allKeywordOutputsSubject = new Subject<KeywordOutput>();
+            _allKeywordSequencesSubject = new Subject<KeywordOutput>();
             _keywordsDict = new ConcurrentDictionary<string, IObservable<KeywordOutput>>();
+
+            _processedKeywordIds = new Subject<int>();
+            _processedKeywordIds.Buffer(processedKeywordsBufferSize)
+                .Select(keywordInfoIds => keywordInfoRepository.SetKeywordsProcessed(keywordInfoIds.ToList()))
+                .Subscribe();
         }
 
         public IObservable<KeywordOutput> GetKeywordSequence(KeywordInput keywordInput)
@@ -40,8 +55,21 @@ namespace SettingsProxyAPI.Keywords
             if (_keywordsDict.TryGetValue(identifier, out IObservable<KeywordOutput> keywordObservable))
                 return keywordObservable;
 
-            keywordObservable =
-                _allKeywordOutputsSubject.Where(k => $"{k.Keyword}&{k.Source}".Equals(identifier));
+            keywordObservable = Observable.Merge(
+                _allKeywordSequencesSubject.Where(k => $"{k.Keyword}&{k.Source}".Equals(identifier)),
+                AsyncEnumerable.ToObservable(_keywordInfoRepository.GetAllUnprocessedKeywords(keywordInput.Keyword, keywordInput.Source))
+                    .Select(keywordInfo => 
+                    { 
+                        return new KeywordOutput
+                        {
+                            Keyword = keywordInfo.Word,
+                            Source = keywordInfo.Source,
+                            FileName = keywordInfo.FileName,
+                            RelativePath = keywordInfo.RelativePath,
+                            FileUrl = keywordInfo.FileUrl,
+                            RepositoryUrl = keywordInfo.RepositoryUrl
+                        };
+                    }));
 
             _keywordsDict.TryAdd(identifier, keywordObservable);
 
@@ -66,7 +94,8 @@ namespace SettingsProxyAPI.Keywords
                 RepositoryUrl = e.Entity.RepositoryUrl
             };
 
-            _allKeywordOutputsSubject.OnNext(keywordInfo);
+            _allKeywordSequencesSubject.OnNext(keywordInfo);
+            _processedKeywordIds.OnNext(e.Entity.Id);
         }
 
         #region IDisposable

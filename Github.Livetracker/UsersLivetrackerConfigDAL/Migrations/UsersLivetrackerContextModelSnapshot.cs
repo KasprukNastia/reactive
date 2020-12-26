@@ -94,6 +94,9 @@ namespace UsersLivetrackerConfigDAL.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<bool>("WasProcessed")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Word")
                         .IsRequired()
                         .HasMaxLength(500)

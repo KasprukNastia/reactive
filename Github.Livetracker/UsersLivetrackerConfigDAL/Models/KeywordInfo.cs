@@ -37,6 +37,8 @@ namespace UsersLivetrackerConfigDAL.Models
         [Required]
         public int KeywordId { get; set; }
 
+        public bool? WasProcessed { get; set; }
+
         public Keyword Keyword { get; set; }
     }
 }
