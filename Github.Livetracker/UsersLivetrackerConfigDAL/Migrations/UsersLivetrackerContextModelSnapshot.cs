@@ -40,11 +40,6 @@ namespace UsersLivetrackerConfigDAL.Migrations
                         .HasColumnType("int")
                         .UseIdentityColumn();
 
-                    b.Property<string>("ShaHash")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -88,6 +83,11 @@ namespace UsersLivetrackerConfigDAL.Migrations
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ShaHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Source")
                         .IsRequired()

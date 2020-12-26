@@ -1,10 +1,10 @@
-﻿using System.Threading.Tasks;
-using UsersLivetrackerConfigDAL.Models;
+﻿using UsersLivetrackerConfigDAL.Models;
 
 namespace UsersLivetrackerConfigDAL.Repos.Interfaces
 {
     public interface IKeywordRepository
     {
-        bool TryAddKeyword(Keyword keyword);
+        (bool addedForUser, bool addedToKeywords) AddKeywordForUser(int userId, string word, string source);
+        (bool removedForUser, bool removedFromKeywords) RemoveKeywordForUser(int userId, string word, string source);
     }
 }

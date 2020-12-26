@@ -35,7 +35,8 @@ namespace SettingsProxyAPI.Auth
                     string hashedToken = Convert.ToBase64String(hashedTokenBytes);
 
                     User user = await _userRepository.GetUserByHashedTokenAsync(hashedToken);
-
+                    if(user == null)
+                        throw new UnauthorizedAccessException("User with such token was not found");
                     observer.OnNext(user);
                 })
                 .Do(

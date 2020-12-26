@@ -5,6 +5,7 @@ namespace UsersLivetrackerConfigDAL.Models
 {
     public class User
     {
+        [Required]
         public int Id { get; set; }
 
         [Required]

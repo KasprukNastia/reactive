@@ -9,7 +9,7 @@ using UsersLivetrackerConfigDAL;
 namespace UsersLivetrackerConfigDAL.Migrations
 {
     [DbContext(typeof(UsersLivetrackerContext))]
-    [Migration("20201225173609_Initial")]
+    [Migration("20201226111729_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -41,11 +41,6 @@ namespace UsersLivetrackerConfigDAL.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .UseIdentityColumn();
-
-                    b.Property<string>("ShaHash")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -90,6 +85,11 @@ namespace UsersLivetrackerConfigDAL.Migrations
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ShaHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Source")
                         .IsRequired()

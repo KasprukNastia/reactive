@@ -4,7 +4,12 @@ namespace UsersLivetrackerConfigDAL.Models
 {
     public class KeywordInfo
     {
+        [Required]
         public int Id { get; set; }
+
+        [Required]
+        [MaxLength(500)]
+        public string ShaHash { get; set; }
 
         [Required]
         [MaxLength(500)]

@@ -5,6 +5,7 @@ namespace UsersLivetrackerConfigDAL.Models
 {
     public class Keyword
     {
+        [Required]
         public int Id { get; set; }
 
         [Required]
@@ -14,10 +15,6 @@ namespace UsersLivetrackerConfigDAL.Models
         [Required]
         [MaxLength(500)]
         public string Source { get; set; }
-
-        [Required]
-        [MaxLength(500)]
-        public string ShaHash { get; set; }
 
         public List<User> Users { get; set; }
 

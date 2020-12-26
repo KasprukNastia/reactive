@@ -41,39 +41,56 @@ namespace SettingsProxyAPI.Keywords
                 await _userAuthHandler.IdentifyUser(context)
                     .SelectMany(user =>
                     {
-                        IObservable<string> userKeywords =
+                        IObservable<KeywordOutput> userKeywords = _keywordProvider.GetListKeywords(
+                            user.Id,
                             AsyncEnumerable.ToObservable(_userRepository.GetAllUserKeywords(user.Id))
-                            .Select(k => k.Word);
+                                .Select(k => new KeywordInput { Keyword = k.Word, Source = k.Source }));
 
-                        return Observable.Merge(
-                            _keywordProvider.GetListKeywords(userKeywords),
-                            Observable.Create<string>(async observer =>
+                        return Observable.Create<KeywordRequest>(async observer =>
+                        {
+                            byte[] buffer;
+                            WebSocketReceiveResult result;
+                            KeywordRequest receivedRequest;
+                            bool onlyConnected = true;
+                            while (webSocket.State == WebSocketState.Open)
                             {
-                                byte[] buffer;
-                                WebSocketReceiveResult result;
-                                KeywordRequest receivedRequest;
-                                while (webSocket.State == WebSocketState.Open)
+                                buffer = new byte[1024 * 4];
+                                if (onlyConnected)
                                 {
-                                    buffer = new byte[1024 * 4];
+                                    receivedRequest = new KeywordRequest { OperationType = OperationType.Connected };
+                                    onlyConnected = false;
+                                }
+                                else
+                                {
                                     result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
                                     receivedRequest = JsonConvert.DeserializeObject<KeywordRequest>(Encoding.UTF8.GetString(buffer, 0, result.Count));
-                                    observer.OnNext(receivedRequest.Keyword);
                                 }
-                            })
-                            .SelectMany(k => _keywordProvider.GetOneKeyword(k)))
-                            .Select(keywordInfo => JsonConvert.SerializeObject(keywordInfo))
-                            .Do(onNext: async message =>
+                                observer.OnNext(receivedRequest);
+                            }
+                        })
+                        .SelectMany(kr =>
+                        {
+                            if(kr.OperationType != OperationType.Connected)
                             {
-                                byte[] output = Encoding.UTF8.GetBytes(message);
-                                await webSocket.SendAsync(new ArraySegment<byte>(output, 0, output.Length),
-                                    WebSocketMessageType.Text, true, CancellationToken.None);
-                            },
-                            onError: async exception =>
-                            {
-                                byte[] output = Encoding.UTF8.GetBytes(exception.Message);
-                                await webSocket.SendAsync(new ArraySegment<byte>(output, 0, output.Length),
-                                    WebSocketMessageType.Text, true, CancellationToken.None);
-                            });
+                                userKeywords = kr.OperationType == OperationType.Subscribe ?
+                                    userKeywords.Merge(_keywordProvider.GetOneKeyword(user.Id, kr)) :
+                                    _keywordProvider.RemoveKeywordForUser(userKeywords, user.Id, kr);
+                            }
+                            return userKeywords;
+                        })
+                        .Select(keywordInfo => JsonConvert.SerializeObject(keywordInfo))
+                        .Do(onNext: async message =>
+                        {
+                            byte[] output = Encoding.UTF8.GetBytes(message);
+                            await webSocket.SendAsync(new ArraySegment<byte>(output, 0, output.Length),
+                                WebSocketMessageType.Text, true, CancellationToken.None);
+                        },
+                        onError: async exception =>
+                        {
+                            byte[] output = Encoding.UTF8.GetBytes(exception.Message);
+                            await webSocket.SendAsync(new ArraySegment<byte>(output, 0, output.Length),
+                                WebSocketMessageType.Text, true, CancellationToken.None);
+                        });
                     })
                     .LastAsync();
             }

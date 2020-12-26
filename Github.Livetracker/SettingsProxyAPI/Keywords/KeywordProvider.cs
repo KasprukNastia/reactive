@@ -4,8 +4,6 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reactive.Threading.Tasks;
-using System.Threading.Tasks;
 using TableDependency.SqlClient;
 using TableDependency.SqlClient.Base.Enums;
 using TableDependency.SqlClient.Base.EventArgs;
@@ -41,21 +39,43 @@ namespace SettingsProxyAPI.Keywords
             _keywordsDict = new ConcurrentDictionary<string, IObservable<KeywordOutput>>();
         }
 
-        public IObservable<KeywordOutput> GetListKeywords(IObservable<string> keywords) =>
-            keywords.Select(k => GetOneKeyword(k)).Merge();
+        public IObservable<KeywordOutput> GetListKeywords(int userId, IObservable<KeywordInput> keywords) =>
+            keywords.Select(k => GetOneKeyword(userId, k)).Merge();
 
-        public IObservable<KeywordOutput> GetOneKeyword(string keyword)
+        public IObservable<KeywordOutput> GetOneKeyword(int userId, KeywordInput keywordInput)
         {
-            if (_keywordsDict.TryGetValue(keyword, out IObservable<KeywordOutput> keywordSubject))
-                return keywordSubject;
+            string identifier = $"{keywordInput.Keyword}&{keywordInput.Source}";
+            if (_keywordsDict.TryGetValue(identifier, out IObservable<KeywordOutput> keywordObservable))
+                return keywordObservable;
 
-            _keywordRepository.TryAddKeyword(new Keyword { Word = keyword });
+            _keywordRepository.AddKeywordForUser(userId, keywordInput.Keyword, keywordInput.Source);
 
-            keywordSubject = _allKeywordOutputsSubject.Where(k => k.Keyword.Equals(keyword));
+            keywordObservable = 
+                _allKeywordOutputsSubject.Where(k => $"{k.Keyword}&{k.Source}".Equals(identifier));
 
-            _keywordsDict.TryAdd(keyword, keywordSubject);
+            _keywordsDict.TryAdd(identifier, keywordObservable);
 
-            return keywordSubject;
+            return keywordObservable;
+        }
+
+        public IObservable<KeywordOutput> RemoveKeywordForUser(
+            IObservable<KeywordOutput> userKeywordsObservable, 
+            int userId, 
+            KeywordInput keywordInput)
+        {
+            (bool removedForUser, bool removedFromKeywords) = 
+                _keywordRepository.RemoveKeywordForUser(userId, keywordInput.Keyword, keywordInput.Source);
+
+            if (removedFromKeywords)
+                _keywordsDict.TryRemove(
+                    $"{keywordInput.Keyword}&{keywordInput.Source}", 
+                    out IObservable<KeywordOutput> keywordObservable);
+
+            return userKeywordsObservable.Where(k => 
+            {
+                var res = !(k.Keyword.Equals(keywordInput.Keyword) && k.Source.Equals(keywordInput.Source));
+                return res;
+            });
         }
 
         private void ListenChanges(object sender, RecordChangedEventArgs<KeywordInfo> e)

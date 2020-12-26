@@ -13,8 +13,7 @@ namespace UsersLivetrackerConfigDAL.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Word = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    Source = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    ShaHash = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                    Source = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -41,6 +40,7 @@ namespace UsersLivetrackerConfigDAL.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    ShaHash = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Word = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Source = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
