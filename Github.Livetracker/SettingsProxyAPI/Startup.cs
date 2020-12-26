@@ -31,8 +31,7 @@ namespace SettingsProxyAPI
             services.AddSingleton<IUserKeywordsRepository, UserKeywordsRepository>();
             services.AddSingleton<IUserAuthHandler, UserAuthHandler>();
             
-            services.AddSingleton<IKeywordUpdatesProvider>(
-                sp => new KeywordProvider(dbConnStr, sp.GetService<IUserKeywordsRepository>()));
+            services.AddSingleton<IKeywordUpdatesProvider>(sp => new KeywordUpdatesProvider(dbConnStr));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
