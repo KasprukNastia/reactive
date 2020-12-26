@@ -8,12 +8,12 @@ using UsersLivetrackerConfigDAL.Repos.Interfaces;
 
 namespace UsersLivetrackerConfigDAL.Repos.Impl
 {
-    public class KeywordRepository : IKeywordRepository, IDisposable
+    public class UserKeywordsRepository : IUserKeywordsRepository, IDisposable
     {
         private readonly IServiceScope _serviceScope;
         private readonly UsersLivetrackerContext _dbContext;
 
-        public KeywordRepository(IServiceScopeFactory scopeFactory)
+        public UserKeywordsRepository(IServiceScopeFactory scopeFactory)
         {
             _serviceScope = scopeFactory.CreateScope();
             _dbContext = _serviceScope.ServiceProvider.GetService<UsersLivetrackerContext>();
@@ -64,6 +64,14 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
             bool isChangesSaved = _dbContext.SaveChanges() > 0;
 
             return (removedForUser && isChangesSaved, removedFromKeywords && isChangesSaved);
+        }
+
+        public List<Keyword> GetAllUserKeywords(int userId)
+        {
+            return _dbContext.Users.Where(u => u.Id == userId)
+                .Include(u => u.Keywords)
+                .SelectMany(u => u.Keywords)
+                .ToList();
         }
 
         #region IDisposable

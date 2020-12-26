@@ -16,19 +16,19 @@ namespace SettingsProxyAPI.Keywords
     public class UserKeywordsMiddleware
     {
         private readonly RequestDelegate _next;
-        private readonly IUserRepository _userRepository;
-        private readonly IKeywordProvider _keywordProvider;
+        private readonly IUserKeywordsRepository _userKeywordsRepository;
+        private readonly IKeywordUpdatesProvider _keywordProvider;
         private readonly IUserAuthHandler _userAuthHandler;
 
         public UserKeywordsMiddleware(
             RequestDelegate next,
             IUserAuthHandler userAuthHandler,
-            IUserRepository userRepository,
-            IKeywordProvider keywordProvider)
+            IUserKeywordsRepository userKeywordsRepository,
+            IKeywordUpdatesProvider keywordProvider)
         {
             _next = next ?? throw new ArgumentNullException(nameof(next));
             _userAuthHandler = userAuthHandler ?? throw new ArgumentNullException(nameof(userAuthHandler));
-            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _userKeywordsRepository = userKeywordsRepository ?? throw new ArgumentNullException(nameof(userKeywordsRepository));
             _keywordProvider = keywordProvider ?? throw new ArgumentNullException(nameof(keywordProvider));
         }
 
@@ -41,43 +41,46 @@ namespace SettingsProxyAPI.Keywords
                 await _userAuthHandler.IdentifyUser(context)
                     .SelectMany(user =>
                     {
-                        IObservable<KeywordOutput> userKeywords = _keywordProvider.GetListKeywords(
-                            user.Id,
-                            AsyncEnumerable.ToObservable(_userRepository.GetAllUserKeywords(user.Id))
-                                .Select(k => new KeywordInput { Keyword = k.Word, Source = k.Source }));
-
                         return Observable.Create<KeywordRequest>(async observer =>
                         {
                             byte[] buffer;
                             WebSocketReceiveResult result;
                             KeywordRequest receivedRequest;
-                            bool onlyConnected = true;
+                            observer.OnNext(new KeywordRequest { OperationType = OperationType.Connected });
                             while (webSocket.State == WebSocketState.Open)
                             {
                                 buffer = new byte[1024 * 4];
-                                if (onlyConnected)
-                                {
-                                    receivedRequest = new KeywordRequest { OperationType = OperationType.Connected };
-                                    onlyConnected = false;
-                                }
-                                else
-                                {
-                                    result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                                    receivedRequest = JsonConvert.DeserializeObject<KeywordRequest>(Encoding.UTF8.GetString(buffer, 0, result.Count));
-                                }
+                                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                                receivedRequest = JsonConvert.DeserializeObject<KeywordRequest>(Encoding.UTF8.GetString(buffer, 0, result.Count));
                                 observer.OnNext(receivedRequest);
                             }
                         })
-                        .SelectMany(kr =>
+                        .SelectMany(keywordRequest =>
                         {
-                            if(kr.OperationType != OperationType.Connected)
+                            if (keywordRequest.OperationType == OperationType.Connected)
                             {
-                                userKeywords = kr.OperationType == OperationType.Subscribe ?
-                                    userKeywords.Merge(_keywordProvider.GetOneKeyword(user.Id, kr)) :
-                                    _keywordProvider.RemoveKeywordForUser(userKeywords, user.Id, kr);
+                                return _userKeywordsRepository.GetAllUserKeywords(user.Id)
+                                    .ToObservable()
+                                    .Select(k => new KeywordInput { Keyword = k.Word, Source = k.Source })
+                                    .Select(k => _keywordProvider.GetKeywordSequence(k))
+                                    .Merge();
                             }
-                            return userKeywords;
+                            else if (keywordRequest.OperationType == OperationType.Subscribe)
+                            {
+                                _userKeywordsRepository.AddKeywordForUser(user.Id, keywordRequest.Keyword, keywordRequest.Source);
+                                return _keywordProvider.GetKeywordSequence(keywordRequest);
+                            }
+                            else
+                            {
+                                (bool removedForUser, bool removedFromKeywords) =
+                                    _userKeywordsRepository.RemoveKeywordForUser(user.Id, keywordRequest.Keyword, keywordRequest.Source);
+                                if (removedFromKeywords)
+                                    _keywordProvider.RemoveKeywordSequence(keywordRequest);
+                                return Observable.Empty<KeywordOutput>();
+                            }
                         })
+                        .Where(keywordOutput => _userKeywordsRepository.GetAllUserKeywords(user.Id)
+                            .Any(k => k.Word.Equals(keywordOutput.Keyword) && k.Source.Equals(keywordOutput.Source)))
                         .Select(keywordInfo => JsonConvert.SerializeObject(keywordInfo))
                         .Do(onNext: async message =>
                         {
@@ -91,6 +94,7 @@ namespace SettingsProxyAPI.Keywords
                             await webSocket.SendAsync(new ArraySegment<byte>(output, 0, output.Length),
                                 WebSocketMessageType.Text, true, CancellationToken.None);
                         });
+
                     })
                     .LastAsync();
             }

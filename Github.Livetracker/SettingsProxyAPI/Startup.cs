@@ -28,11 +28,11 @@ namespace SettingsProxyAPI
                 options => options.UseSqlServer(dbConnStr));
 
             services.AddSingleton<IUserRepository, UserRepository>();
-            services.AddSingleton<IKeywordRepository, KeywordRepository>();
+            services.AddSingleton<IUserKeywordsRepository, UserKeywordsRepository>();
             services.AddSingleton<IUserAuthHandler, UserAuthHandler>();
             
-            services.AddSingleton<IKeywordProvider>(
-                sp => new KeywordProvider(dbConnStr, sp.GetService<IKeywordRepository>()));
+            services.AddSingleton<IKeywordUpdatesProvider>(
+                sp => new KeywordProvider(dbConnStr, sp.GetService<IUserKeywordsRepository>()));
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
