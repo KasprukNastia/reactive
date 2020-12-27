@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using NSec.Cryptography;
 using System;
 using System.Net.WebSockets;
 using System.Reactive.Linq;
@@ -9,13 +8,13 @@ using System.Threading;
 using UsersLivetrackerConfigDAL.Models;
 using UsersLivetrackerConfigDAL.Repos.Interfaces;
 
-namespace SettingsProxyAPI.Auth
+namespace SettingsProxyAPI.Auth.WebSockets
 {
-    public class UserAuthHandler : IUserAuthHandler
+    public class WebSocketsAuthHandler : IWebSocketsAuthHandler
     {
         private readonly IUserRepository _userRepository;
 
-        public UserAuthHandler(IUserRepository userRepository)
+        public WebSocketsAuthHandler(IUserRepository userRepository)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
@@ -30,9 +29,7 @@ namespace SettingsProxyAPI.Auth
                     if (string.IsNullOrWhiteSpace(accessToken))
                         throw new UnauthorizedAccessException("Access token is an empty string");
 
-                    HashAlgorithm algorithm = HashAlgorithm.Sha256;
-                    byte[] hashedTokenBytes = algorithm.Hash(Encoding.UTF8.GetBytes(accessToken));
-                    string hashedToken = Convert.ToBase64String(hashedTokenBytes);
+                    string hashedToken = accessToken.GetTokenHash();
 
                     User user = await _userRepository.GetUserByHashedTokenAsync(hashedToken);
                     if(user == null)

@@ -5,7 +5,7 @@ namespace SettingsProxyAPI.Keywords
 {
     public interface IKeywordUpdatesProvider
     {
-        IObservable<KeywordOutput> GetKeywordSequence(KeywordInput keywordInput);
-        bool RemoveKeywordSequence(KeywordInput keywordInput);
+        IObservable<KeywordOutput> GetKeywordSequence(KeywordRequest keywordInput);
+        bool RemoveKeywordSequence(KeywordRequest keywordInput);
     }
 }

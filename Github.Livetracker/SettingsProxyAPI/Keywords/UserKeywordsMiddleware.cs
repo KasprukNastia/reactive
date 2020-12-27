@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
-using SettingsProxyAPI.Auth;
+using SettingsProxyAPI.Auth.WebSockets;
 using SettingsProxyAPI.Models;
 using System;
 using System.Linq;
@@ -18,11 +18,11 @@ namespace SettingsProxyAPI.Keywords
         private readonly RequestDelegate _next;
         private readonly IUserKeywordsRepository _userKeywordsRepository;
         private readonly IKeywordUpdatesProvider _keywordProvider;
-        private readonly IUserAuthHandler _userAuthHandler;
+        private readonly IWebSocketsAuthHandler _userAuthHandler;
 
         public UserKeywordsMiddleware(
             RequestDelegate next,
-            IUserAuthHandler userAuthHandler,
+            IWebSocketsAuthHandler userAuthHandler,
             IUserKeywordsRepository userKeywordsRepository,
             IKeywordUpdatesProvider keywordProvider)
         {
@@ -41,17 +41,17 @@ namespace SettingsProxyAPI.Keywords
                 await _userAuthHandler.IdentifyUser(context)
                     .SelectMany(user =>
                     {
-                        return Observable.Create<KeywordRequest>(async observer =>
+                        return Observable.Create<KeywordSubscriptionRequest>(async observer =>
                         {
                             byte[] buffer;
                             WebSocketReceiveResult result;
-                            KeywordRequest receivedRequest;
-                            observer.OnNext(new KeywordRequest { OperationType = OperationType.Connected });
+                            KeywordSubscriptionRequest receivedRequest;
+                            observer.OnNext(new KeywordSubscriptionRequest { OperationType = OperationType.Connected });
                             while (webSocket.State == WebSocketState.Open)
                             {
                                 buffer = new byte[1024 * 4];
                                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                                receivedRequest = JsonConvert.DeserializeObject<KeywordRequest>(Encoding.UTF8.GetString(buffer, 0, result.Count));
+                                receivedRequest = JsonConvert.DeserializeObject<KeywordSubscriptionRequest>(Encoding.UTF8.GetString(buffer, 0, result.Count));
                                 observer.OnNext(receivedRequest);
                             }
                         })
@@ -61,7 +61,7 @@ namespace SettingsProxyAPI.Keywords
                             {
                                 return _userKeywordsRepository.GetAllUserKeywords(user.Id)
                                     .ToObservable()
-                                    .Select(k => new KeywordInput { Keyword = k.Word, Source = k.Source })
+                                    .Select(k => new KeywordRequest { Keyword = k.Word, Source = k.Source })
                                     .Select(k => _keywordProvider.GetKeywordSequence(k))
                                     .Merge();
                             }

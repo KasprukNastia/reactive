@@ -20,7 +20,7 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
             _dbContext = _serviceScope.ServiceProvider.GetService<UsersLivetrackerContext>();
         }
 
-        public Task<int> SetKeywordsProcessed(List<int> keywordInfoIds)
+        public Task<int> SetRecordsProcessed(List<int> keywordInfoIds)
         {
             foreach (KeywordInfo keywordInfo in _dbContext.KeywordInfos.Where(k => keywordInfoIds.Contains(k.Id)))
                 keywordInfo.WasProcessed = true;
@@ -28,11 +28,27 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
             return _dbContext.SaveChangesAsync();
         }
 
-        public IAsyncEnumerable<KeywordInfo> GetAllUnprocessedKeywords(string word, string source)
+        public IAsyncEnumerable<KeywordInfo> GetAllUnprocessedRecords(string word, string source)
         {
             return _dbContext.KeywordInfos
                 .Where(k => k.Word.Equals(word) && k.Source.Equals(source) && (!k.WasProcessed.HasValue || !k.WasProcessed.Value))
                 .AsAsyncEnumerable();
+        }
+
+        public Task<List<KeywordBySourceItem>> GetKeywordBySourceStatistics(string word)
+        {
+            return _dbContext.KeywordInfos
+                .Where(k => k.Word.Equals(word))
+                .GroupBy(k => k.Source)
+                .Select(grouped =>
+                    new KeywordBySourceItem
+                    {
+                        Word = word,
+                        Source = grouped.Key,
+                        WordForSourceCount = grouped.Count()
+                    })
+                .OrderByDescending(k => k.WordForSourceCount)
+                .ToListAsync();
         }
 
         #region IDisposable

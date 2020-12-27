@@ -1,7 +1,8 @@
 ﻿namespace SettingsProxyAPI.Models
 {
-    public class KeywordRequest : KeywordInput
+    public class KeywordRequest
     {
-        public OperationType OperationType { get; set; }
+        public string Keyword { get; set; }
+        public string Source { get; set; }
     }
 }

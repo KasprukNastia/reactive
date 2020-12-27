@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using UsersLivetrackerConfigDAL.Models;
 
 namespace UsersLivetrackerConfigDAL
@@ -13,6 +14,14 @@ namespace UsersLivetrackerConfigDAL
             : base(options)
         {
             Database.EnsureCreated();
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+            {
+                relationship.DeleteBehavior = DeleteBehavior.ClientSetNull;
+            }
         }
     }
 }

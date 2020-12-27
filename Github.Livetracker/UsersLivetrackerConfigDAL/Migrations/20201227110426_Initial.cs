@@ -48,7 +48,7 @@ namespace UsersLivetrackerConfigDAL.Migrations
                     FileUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     RepositoryUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     KeywordId = table.Column<int>(type: "int", nullable: false),
-                    WasProcessed = table.Column<bool>(type: "bit", nullable: false)
+                    WasProcessed = table.Column<bool>(type: "bit", nullable: true)
                 },
                 constraints: table =>
                 {

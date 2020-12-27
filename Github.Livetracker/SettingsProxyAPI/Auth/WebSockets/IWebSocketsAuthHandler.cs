@@ -2,9 +2,9 @@
 using System;
 using UsersLivetrackerConfigDAL.Models;
 
-namespace SettingsProxyAPI.Auth
+namespace SettingsProxyAPI.Auth.WebSockets
 {
-    public interface IUserAuthHandler
+    public interface IWebSocketsAuthHandler
     {
         IObservable<User> IdentifyUser(HttpContext context);
     }

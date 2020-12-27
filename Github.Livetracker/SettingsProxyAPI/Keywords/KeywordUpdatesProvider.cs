@@ -45,11 +45,11 @@ namespace SettingsProxyAPI.Keywords
 
             _processedKeywordIds = new Subject<int>();
             _processedKeywordIds.Buffer(processedKeywordsBufferSize)
-                .Select(keywordInfoIds => keywordInfoRepository.SetKeywordsProcessed(keywordInfoIds.ToList()))
+                .Select(keywordInfoIds => keywordInfoRepository.SetRecordsProcessed(keywordInfoIds.ToList()))
                 .Subscribe();
         }
 
-        public IObservable<KeywordOutput> GetKeywordSequence(KeywordInput keywordInput)
+        public IObservable<KeywordOutput> GetKeywordSequence(KeywordRequest keywordInput)
         {
             string identifier = $"{keywordInput.Keyword}&{keywordInput.Source}";
             if (_keywordsDict.TryGetValue(identifier, out IObservable<KeywordOutput> keywordObservable))
@@ -57,7 +57,7 @@ namespace SettingsProxyAPI.Keywords
 
             keywordObservable = Observable.Merge(
                 _allKeywordSequencesSubject.Where(k => $"{k.Keyword}&{k.Source}".Equals(identifier)),
-                AsyncEnumerable.ToObservable(_keywordInfoRepository.GetAllUnprocessedKeywords(keywordInput.Keyword, keywordInput.Source))
+                AsyncEnumerable.ToObservable(_keywordInfoRepository.GetAllUnprocessedRecords(keywordInput.Keyword, keywordInput.Source))
                     .Select(keywordInfo => 
                     { 
                         return new KeywordOutput
@@ -76,7 +76,7 @@ namespace SettingsProxyAPI.Keywords
             return keywordObservable;
         }
 
-        public bool RemoveKeywordSequence(KeywordInput keywordInput) =>
+        public bool RemoveKeywordSequence(KeywordRequest keywordInput) =>
             _keywordsDict.TryRemove($"{keywordInput.Keyword}&{keywordInput.Source}", out IObservable<KeywordOutput> keywordObservable);
 
         private void ListenChanges(object sender, RecordChangedEventArgs<KeywordInfo> e)
