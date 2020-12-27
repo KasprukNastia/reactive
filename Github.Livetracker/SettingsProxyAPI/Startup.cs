@@ -27,17 +27,19 @@ namespace SettingsProxyAPI
         public void ConfigureServices(IServiceCollection services)
         {
             string dbConnStr = Configuration.GetConnectionString("UsersLivetrackerConnection");
-            services.AddDbContext<UsersLivetrackerContext>(
+            services.AddDbContext<GithubLivetrackerContext>(
                 options => options.UseSqlServer(dbConnStr, sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
             services.AddSingleton<IUserRepository, UserRepository>();
             services.AddSingleton<IUserKeywordsRepository, UserKeywordsRepository>();
             services.AddSingleton<IKeywordInfoRepository, KeywordInfoRepository>();
-            services.AddSingleton<IWebSocketsAuthHandler, WebSocketsAuthHandler>();
-            
-            services.AddSingleton<IKeywordUpdatesProvider>(sp => 
-                new KeywordUpdatesProvider(sp.GetService<IKeywordInfoRepository>(), dbConnStr));
 
+            services.AddSingleton<ILiveKeywordUpdatesProcessor>(sp =>
+                new LiveKeywordUpdatesProcessor(sp.GetService<IKeywordInfoRepository>(), dbConnStr));
+            services.AddSingleton<IKeywordUpdatesProvider, KeywordUpdatesProvider>();
+            services.AddSingleton<IKeywordSubscriptionHandler, KeywordSubscriptionHandler>();
+
+            services.AddSingleton<IWebSocketsAuthHandler, WebSocketsAuthHandler>();
             services.AddAuthentication(opts =>
             {
                 opts.DefaultScheme = HttpAuthScheme.SchemeName;

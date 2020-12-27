@@ -12,12 +12,12 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
     public class KeywordInfoRepository : IKeywordInfoRepository, IDisposable
     {
         private readonly IServiceScope _serviceScope;
-        private readonly UsersLivetrackerContext _dbContext;
+        private readonly GithubLivetrackerContext _dbContext;
 
         public KeywordInfoRepository(IServiceScopeFactory scopeFactory)
         {
             _serviceScope = scopeFactory.CreateScope();
-            _dbContext = _serviceScope.ServiceProvider.GetService<UsersLivetrackerContext>();
+            _dbContext = _serviceScope.ServiceProvider.GetService<GithubLivetrackerContext>();
         }
 
         public Task<int> SetRecordsProcessed(List<int> keywordInfoIds)

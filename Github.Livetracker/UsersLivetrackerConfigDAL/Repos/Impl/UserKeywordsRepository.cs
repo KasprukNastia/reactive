@@ -11,12 +11,12 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
     public class UserKeywordsRepository : IUserKeywordsRepository, IDisposable
     {
         private readonly IServiceScope _serviceScope;
-        private readonly UsersLivetrackerContext _dbContext;
+        private readonly GithubLivetrackerContext _dbContext;
 
         public UserKeywordsRepository(IServiceScopeFactory scopeFactory)
         {
             _serviceScope = scopeFactory.CreateScope();
-            _dbContext = _serviceScope.ServiceProvider.GetService<UsersLivetrackerContext>();
+            _dbContext = _serviceScope.ServiceProvider.GetService<GithubLivetrackerContext>();
         }
 
         public (bool addedForUser, bool addedToKeywords) AddKeywordForUser(int userId, string word, string source)

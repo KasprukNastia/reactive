@@ -9,7 +9,7 @@ using UsersLivetrackerConfigDAL;
 
 namespace UsersLivetrackerConfigDAL.Migrations
 {
-    [DbContext(typeof(UsersLivetrackerContext))]
+    [DbContext(typeof(GithubLivetrackerContext))]
     [Migration("20201227110426_Initial")]
     partial class Initial
     {

@@ -23,7 +23,7 @@ namespace AuthAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<UsersLivetrackerContext>(
+            services.AddDbContext<GithubLivetrackerContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("UsersLivetrackerConnection")));
 
             services.AddScoped<IUserRepository, UserRepository>();

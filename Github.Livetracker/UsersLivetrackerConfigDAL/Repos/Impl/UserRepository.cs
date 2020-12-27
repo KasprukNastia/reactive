@@ -11,12 +11,12 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
     public class UserRepository : IUserRepository, IDisposable
     {
         private readonly IServiceScope _serviceScope;
-        private readonly UsersLivetrackerContext _dbContext;
+        private readonly GithubLivetrackerContext _dbContext;
 
         public UserRepository(IServiceScopeFactory scopeFactory)
         {
             _serviceScope = scopeFactory.CreateScope();
-            _dbContext = _serviceScope.ServiceProvider.GetService<UsersLivetrackerContext>();
+            _dbContext = _serviceScope.ServiceProvider.GetService<GithubLivetrackerContext>();
         }
 
         public Task<int> AddUserAsync(User user)

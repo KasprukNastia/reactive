@@ -8,7 +8,7 @@ using UsersLivetrackerConfigDAL;
 
 namespace UsersLivetrackerConfigDAL.Migrations
 {
-    [DbContext(typeof(UsersLivetrackerContext))]
+    [DbContext(typeof(GithubLivetrackerContext))]
     partial class UsersLivetrackerContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
