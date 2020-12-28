@@ -11,7 +11,7 @@ using UsersLivetrackerConfigDAL.Repos.Interfaces;
 namespace KeywordsAPI.Test
 {
     [TestFixture]
-    public class WebSocketsAuthHandlerTest
+    class WebSocketsAuthHandlerTest
     {
         private Mock<IUserRepository> _mockUserRepository;
 

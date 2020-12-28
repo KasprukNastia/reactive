@@ -14,6 +14,8 @@ namespace SettingsProxyAPI.Keywords
 
         private readonly ConcurrentDictionary<string, IObservable<KeywordOutput>> _keywordsDict;
 
+        public int ObservedKeywordsCount => _keywordsDict.Count;
+
         public KeywordUpdatesProvider(
             IKeywordInfoRepository keywordInfoRepository,
             ILiveKeywordUpdatesProcessor keywordUpdatesProvider)
@@ -24,15 +26,15 @@ namespace SettingsProxyAPI.Keywords
             _keywordsDict = new ConcurrentDictionary<string, IObservable<KeywordOutput>>();
         }
 
-        public IObservable<KeywordOutput> GetKeywordSequence(KeywordRequest keywordInput)
+        public IObservable<KeywordOutput> GetKeywordSequence(KeywordRequest keywordRequest)
         {
-            string identifier = $"{keywordInput.Keyword}&{keywordInput.Source}";
+            string identifier = $"{keywordRequest.Keyword}&{keywordRequest.Source}";
             if (_keywordsDict.TryGetValue(identifier, out IObservable<KeywordOutput> keywordObservable))
                 return keywordObservable;
 
             keywordObservable = Observable.Merge(
                 _keywordUpdatesProvider.AllKeywordSequencesSubject.Where(k => $"{k.Keyword}&{k.Source}".Equals(identifier)),
-                AsyncEnumerable.ToObservable(_keywordInfoRepository.GetAllUnprocessedRecords(keywordInput.Keyword, keywordInput.Source))
+                AsyncEnumerable.ToObservable(_keywordInfoRepository.GetAllUnprocessedRecords(keywordRequest.Keyword, keywordRequest.Source))
                     .Select(keywordInfo => 
                     { 
                         return new KeywordOutput
