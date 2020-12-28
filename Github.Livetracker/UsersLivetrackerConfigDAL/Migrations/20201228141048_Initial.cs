@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace UsersLivetrackerConfigDAL.Migrations
+namespace GithubLivetrackerDAL.Migrations
 {
     public partial class Initial : Migration
     {
@@ -47,7 +47,7 @@ namespace UsersLivetrackerConfigDAL.Migrations
                     RelativePath = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     FileUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     RepositoryUrl = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    KeywordId = table.Column<int>(type: "int", nullable: false),
+                    KeywordId = table.Column<int>(type: "int", nullable: true),
                     WasProcessed = table.Column<bool>(type: "bit", nullable: true)
                 },
                 constraints: table =>
@@ -58,7 +58,7 @@ namespace UsersLivetrackerConfigDAL.Migrations
                         column: x => x.KeywordId,
                         principalTable: "Keywords",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -76,13 +76,13 @@ namespace UsersLivetrackerConfigDAL.Migrations
                         column: x => x.KeywordsId,
                         principalTable: "Keywords",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_KeywordUser_Users_UsersId",
                         column: x => x.UsersId,
                         principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(

@@ -24,7 +24,9 @@ namespace AuthAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<GithubLivetrackerContext>(
-                options => options.UseSqlServer(Configuration.GetConnectionString("UsersLivetrackerConnection")));
+                options => options.UseSqlServer(
+                    Configuration.GetConnectionString("UsersLivetrackerConnection"), 
+                    sqlOptions => sqlOptions.EnableRetryOnFailure()));
 
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<ITokenGenerator, TokenGenerator>();

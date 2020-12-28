@@ -34,8 +34,7 @@ namespace UsersLivetrackerConfigDAL.Models
         [MaxLength(1000)]
         public string RepositoryUrl { get; set; }
 
-        [Required]
-        public int KeywordId { get; set; }
+        public int? KeywordId { get; set; }
 
         public bool? WasProcessed { get; set; }
 

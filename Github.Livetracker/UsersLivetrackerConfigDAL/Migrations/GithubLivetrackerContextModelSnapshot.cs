@@ -6,10 +6,10 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UsersLivetrackerConfigDAL;
 
-namespace UsersLivetrackerConfigDAL.Migrations
+namespace GithubLivetrackerDAL.Migrations
 {
     [DbContext(typeof(GithubLivetrackerContext))]
-    partial class UsersLivetrackerContextModelSnapshot : ModelSnapshot
+    partial class GithubLivetrackerContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
@@ -73,7 +73,7 @@ namespace UsersLivetrackerConfigDAL.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<int>("KeywordId")
+                    b.Property<int?>("KeywordId")
                         .HasColumnType("int");
 
                     b.Property<string>("RelativePath")
@@ -137,13 +137,11 @@ namespace UsersLivetrackerConfigDAL.Migrations
                     b.HasOne("UsersLivetrackerConfigDAL.Models.Keyword", null)
                         .WithMany()
                         .HasForeignKey("KeywordsId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("UsersLivetrackerConfigDAL.Models.User", null)
                         .WithMany()
                         .HasForeignKey("UsersId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -151,9 +149,7 @@ namespace UsersLivetrackerConfigDAL.Migrations
                 {
                     b.HasOne("UsersLivetrackerConfigDAL.Models.Keyword", "Keyword")
                         .WithMany("KeywordInfos")
-                        .HasForeignKey("KeywordId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("KeywordId");
 
                     b.Navigation("Keyword");
                 });
