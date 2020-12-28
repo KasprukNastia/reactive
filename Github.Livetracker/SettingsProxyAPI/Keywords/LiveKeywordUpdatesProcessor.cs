@@ -25,7 +25,9 @@ namespace SettingsProxyAPI.Keywords
         public LiveKeywordUpdatesProcessor(
             IKeywordInfoRepository keywordInfoRepository,
             string dbConnStr,
-            int processedKeywordsBufferSize = 3)
+            int collectInBufferSeconds = 5,
+            int processedKeywordsSaveTimeoutSeconds = 5,
+            int processedKeywordsSaveRetryCount = 20)
         {
             if (string.IsNullOrWhiteSpace(dbConnStr))
                 throw new ArgumentNullException(nameof(dbConnStr));
@@ -37,9 +39,21 @@ namespace SettingsProxyAPI.Keywords
 
             _allKeywordSequencesSubject = new Subject<KeywordOutput>();
 
+            var helperSubject = new BehaviorSubject<object>(new object());
+            helperSubject.OnNext(new object());
+            IObservable<(long, object)> bufferBoundaries = 
+                Observable.Interval(TimeSpan.FromSeconds(collectInBufferSeconds))
+                    .Zip(helperSubject, (i, o) => (i, o));
+
             _processedKeywordIds = new Subject<int>();
-            _processedKeywordIds.Buffer(processedKeywordsBufferSize)
+            _processedKeywordIds.Buffer(bufferBoundaries)
                 .Select(keywordInfoIds => keywordInfoRepository.SetRecordsProcessed(keywordInfoIds.ToList()))
+                .Timeout(TimeSpan.FromSeconds(processedKeywordsSaveTimeoutSeconds))
+                .Retry(processedKeywordsSaveRetryCount)
+                .Do(
+                    onNext: i => { }, 
+                    onError: e => helperSubject.OnNext(new object()),
+                    onCompleted: () => helperSubject.OnNext(new object()))
                 .Subscribe();
         }
 

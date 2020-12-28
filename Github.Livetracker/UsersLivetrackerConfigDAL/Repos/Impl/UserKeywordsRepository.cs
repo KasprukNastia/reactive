@@ -51,11 +51,15 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
         {
             Keyword keyword = _dbContext.Keywords.Where(k => k.Word.Equals(word) && k.Source.Equals(source))
                 .Include(k => k.Users).FirstOrDefault();
+            User user = _dbContext.Users.Where(u => u.Id == userId)
+                .Include(u => u.Keywords).FirstOrDefault();
 
-            if (keyword == null)
+            if (keyword == null || user == null)
                 return (false, false);
 
             bool removedForUser = keyword.Users.RemoveAll(u => u.Id == userId) > 0;
+            removedForUser = 
+                removedForUser && user.Keywords.RemoveAll(k => k.Word.Equals(word) && k.Source.Equals(source)) > 0;
 
             bool removedFromKeywords = false;
             if (keyword.Users.Count == 0)

@@ -22,6 +22,9 @@ namespace UsersLivetrackerConfigDAL.Repos.Impl
 
         public Task<int> SetRecordsProcessed(List<int> keywordInfoIds)
         {
+            if (keywordInfoIds.Count == 0)
+                return Task.FromResult(1);
+
             foreach (KeywordInfo keywordInfo in _dbContext.KeywordInfos.Where(k => keywordInfoIds.Contains(k.Id)))
                 keywordInfo.WasProcessed = true;
 
