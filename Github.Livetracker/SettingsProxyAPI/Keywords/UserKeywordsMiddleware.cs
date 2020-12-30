@@ -66,6 +66,7 @@ namespace SettingsProxyAPI.Keywords
                                 byte[] output = Encoding.UTF8.GetBytes(exception.Message);
                                 await webSocket.SendAsync(new ArraySegment<byte>(output, 0, output.Length),
                                     WebSocketMessageType.Text, true, CancellationToken.None);
+                                await webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, "Internal server error", CancellationToken.None);
                             });
                     })
                     .LastAsync();
